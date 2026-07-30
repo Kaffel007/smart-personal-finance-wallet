@@ -99,4 +99,6 @@ La phase 1 est terminee et la phase 2 est en cours. Le backend Spring Boot 3.5.1
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
-L'authentification, Spring Security et JWT ne sont pas encore implementes. Aucune fonctionnalite d'inscription, de connexion ou de securite des endpoints n'est encore disponible. Aucun projet Angular ou Python n'est encore initialise.
+L'endpoint backend `POST /api/auth/register` est implemente et valide avec H2 et MySQL 8. Il valide et normalise les donnees, attribue obligatoirement le role `USER` et chiffre les mots de passe avec BCrypt avant leur enregistrement. Le stockage du hash BCrypt a ete valide sur la base MySQL reelle et la reponse HTTP ne contient aucune donnee sensible.
+
+La connexion, Spring Security et JWT ne sont pas encore implementes. Aucune securite des endpoints n'est encore active. Aucun projet Angular ou Python n'est encore initialise.
