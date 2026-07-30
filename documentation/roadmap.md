@@ -24,7 +24,8 @@ Statuts possibles : `Planifie`, `En cours`, `Termine`.
 - Principales taches : configurer Spring Security, BCrypt, JWT, roles `USER` et `ADMIN`.
 - Resultat attendu : API securisee avec authentification fonctionnelle.
 - Criteres de validation : inscription, connexion et acces aux routes protegees verifies.
-- Statut initial : Planifie.
+- Avancement : sous-phase `AppUser`, `Role`, repository et migration Flyway V1 terminee et validee avec H2 et MySQL 8.
+- Statut initial : En cours.
 
 ## 3. Profil utilisateur
 

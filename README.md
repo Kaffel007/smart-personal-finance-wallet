@@ -73,7 +73,7 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | --- | --- |
 | 0. Cadrage et structure | Termine |
 | 1. Initialisation du backend Spring Boot | Termine |
-| 2. Authentification et securite | Planifie |
+| 2. Authentification et securite | En cours |
 | 3. Profil utilisateur | Planifie |
 | 4. Categories et modes de paiement | Planifie |
 | 5. Transactions | Planifie |
@@ -95,8 +95,8 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 
 ## Etat actuel
 
-La phase 1 est terminee. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le Maven Wrapper fonctionne et les tests, executes avec le profil de test, utilisent uniquement la base H2 en memoire. Ils retournent `BUILD SUCCESS`.
+La phase 1 est terminee et la phase 2 est en cours. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
-La connexion locale a MySQL avec le compte technique `finance_app` a ete validee. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
+La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
-Aucune entite metier, migration metier ou fonctionnalite d'authentification n'existe encore. Aucun projet Angular ou Python n'est encore initialise.
+L'authentification, Spring Security et JWT ne sont pas encore implementes. Aucune fonctionnalite d'inscription, de connexion ou de securite des endpoints n'est encore disponible. Aucun projet Angular ou Python n'est encore initialise.
