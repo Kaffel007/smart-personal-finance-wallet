@@ -6,6 +6,7 @@ import com.smartfinance.wallet.auth.dto.RegisterRequest;
 import com.smartfinance.wallet.auth.dto.UserSummaryResponse;
 import com.smartfinance.wallet.common.exception.EmailAlreadyUsedException;
 import com.smartfinance.wallet.common.exception.InvalidCredentialsException;
+import com.smartfinance.wallet.security.jwt.JwtService;
 import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
@@ -21,13 +22,16 @@ public class AuthService {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public AuthService(
             AppUserRepository appUserRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService
     ) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -68,6 +72,12 @@ public class AuthService {
             throw new InvalidCredentialsException();
         }
 
-        return new LoginResponse(UserSummaryResponse.from(user));
+        String accessToken = jwtService.generateToken(user);
+        return new LoginResponse(
+                accessToken,
+                "Bearer",
+                jwtService.getExpirationSeconds(),
+                UserSummaryResponse.from(user)
+        );
     }
 }

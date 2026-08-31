@@ -1,5 +1,7 @@
 package com.smartfinance.wallet.auth.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
@@ -9,14 +11,23 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 import java.time.Instant;
+import java.util.Base64;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +52,12 @@ class AuthControllerIntegrationTests {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Value("${app.jwt.secret-base64}")
+    private String jwtSecretBase64;
 
     @BeforeEach
     void cleanDatabase() {
@@ -203,7 +220,7 @@ class AuthControllerIntegrationTests {
         String passwordHash = user.getPasswordHash();
         Instant updatedAt = user.getUpdatedAt();
 
-        mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginRequest(requestEmail, RAW_PASSWORD)))
                 .andExpect(status().isOk())
@@ -217,7 +234,26 @@ class AuthControllerIntegrationTests {
                 .andExpect(jsonPath("$.user.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.user.enabled").doesNotExist())
                 .andExpect(jsonPath("$.user.blocked").doesNotExist())
-                .andExpect(jsonPath("$.token").doesNotExist());
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.expiresInSeconds").value(3600))
+                .andExpect(jsonPath("$.refreshToken").doesNotExist())
+                .andReturn();
+
+        JsonNode response = objectMapper.readTree(result.getResponse().getContentAsString());
+        String accessToken = response.get("accessToken").asText();
+        Jws<Claims> parsedToken = Jwts.parser()
+                .verifyWith(Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecretBase64)))
+                .build()
+                .parseSignedClaims(accessToken);
+        Claims claims = parsedToken.getPayload();
+        assertThat(parsedToken.getHeader().getAlgorithm()).isEqualTo("HS256");
+        assertThat(claims.getSubject()).isEqualTo(id.toString());
+        assertThat(claims.getIssuedAt()).isNotNull();
+        assertThat(claims.getExpiration()).isNotNull();
+        assertThat(claims.keySet()).doesNotContainAnyElementsOf(Set.of(
+                "userId", "email", "role", "password", "passwordHash", "enabled", "blocked"
+        ));
 
         AppUser unchangedUser = appUserRepository.findById(id).orElseThrow();
         assertThat(passwordEncoder.matches(RAW_PASSWORD, passwordHash)).isTrue();
@@ -256,6 +292,7 @@ class AuthControllerIntegrationTests {
                         .value("Identifiants incorrects ou compte indisponible."))
                 .andExpect(jsonPath("$.path").value("/api/auth/login"))
                 .andExpect(jsonPath("$.fieldErrors").isEmpty())
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
                 .andExpect(jsonPath("$.exception").doesNotExist())
                 .andExpect(jsonPath("$.table").doesNotExist());
     }

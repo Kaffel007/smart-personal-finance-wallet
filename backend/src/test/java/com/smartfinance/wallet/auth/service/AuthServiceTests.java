@@ -6,6 +6,7 @@ import com.smartfinance.wallet.auth.dto.RegisterRequest;
 import com.smartfinance.wallet.auth.dto.UserSummaryResponse;
 import com.smartfinance.wallet.common.exception.EmailAlreadyUsedException;
 import com.smartfinance.wallet.common.exception.InvalidCredentialsException;
+import com.smartfinance.wallet.security.jwt.JwtService;
 import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
@@ -39,6 +40,9 @@ class AuthServiceTests {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
 
     @InjectMocks
     private AuthService authService;
@@ -122,19 +126,25 @@ class AuthServiceTests {
         LoginRequest request = new LoginRequest("  SARA@EXAMPLE.COM  ", RAW_PASSWORD);
         when(appUserRepository.findByEmail("sara@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(RAW_PASSWORD, PASSWORD_HASH)).thenReturn(true);
+        when(jwtService.generateToken(user)).thenReturn("signed-test-token");
+        when(jwtService.getExpirationSeconds()).thenReturn(3600L);
 
         LoginResponse response = authService.login(request);
 
         verify(appUserRepository).findByEmail("sara@example.com");
         verify(passwordEncoder).matches(RAW_PASSWORD, PASSWORD_HASH);
         verify(passwordEncoder, never()).encode(any());
+        verify(jwtService).generateToken(user);
         verify(appUserRepository, never()).save(any());
         verify(appUserRepository, never()).saveAndFlush(any());
+        assertThat(response.accessToken()).isEqualTo("signed-test-token");
+        assertThat(response.tokenType()).isEqualTo("Bearer");
+        assertThat(response.expiresInSeconds()).isEqualTo(3600);
         assertThat(response.user().email()).isEqualTo("sara@example.com");
         assertThat(response.user().role()).isEqualTo(Role.USER);
         assertThat(Arrays.stream(LoginResponse.class.getRecordComponents())
                 .map(component -> component.getName()))
-                .containsExactly("user");
+                .containsExactly("accessToken", "tokenType", "expiresInSeconds", "user");
         assertThat(Arrays.stream(UserSummaryResponse.class.getRecordComponents())
                 .map(component -> component.getName()))
                 .doesNotContain("password", "passwordHash", "enabled", "blocked");
@@ -150,6 +160,7 @@ class AuthServiceTests {
 
         verify(passwordEncoder, never()).matches(any(), any());
         verify(passwordEncoder, never()).encode(any());
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
@@ -164,6 +175,7 @@ class AuthServiceTests {
 
         verify(passwordEncoder).matches("wrong-password", PASSWORD_HASH);
         verify(passwordEncoder, never()).encode(any());
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
@@ -176,6 +188,7 @@ class AuthServiceTests {
         assertGenericAuthenticationError(
                 () -> authService.login(new LoginRequest("sara@example.com", RAW_PASSWORD))
         );
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
@@ -188,6 +201,7 @@ class AuthServiceTests {
         assertGenericAuthenticationError(
                 () -> authService.login(new LoginRequest("sara@example.com", RAW_PASSWORD))
         );
+        verify(jwtService, never()).generateToken(any());
     }
 
     @Test
@@ -195,6 +209,7 @@ class AuthServiceTests {
         AppUser user = createLoginUser(Role.ADMIN);
         when(appUserRepository.findByEmail("sara@example.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(RAW_PASSWORD, PASSWORD_HASH)).thenReturn(true);
+        when(jwtService.generateToken(user)).thenReturn("signed-test-token");
 
         authService.login(new LoginRequest("sara@example.com", RAW_PASSWORD));
 
