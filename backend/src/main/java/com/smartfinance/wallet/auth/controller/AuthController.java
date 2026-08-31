@@ -1,5 +1,7 @@
 package com.smartfinance.wallet.auth.controller;
 
+import com.smartfinance.wallet.auth.dto.LoginRequest;
+import com.smartfinance.wallet.auth.dto.LoginResponse;
 import com.smartfinance.wallet.auth.dto.RegisterRequest;
 import com.smartfinance.wallet.auth.dto.UserSummaryResponse;
 import com.smartfinance.wallet.auth.service.AuthService;
@@ -27,5 +29,12 @@ public class AuthController {
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request
+    ) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }
