@@ -73,7 +73,7 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | --- | --- |
 | 0. Cadrage et structure | Termine |
 | 1. Initialisation du backend Spring Boot | Termine |
-| 2. Authentification et securite | En cours |
+| 2. Authentification et securite | Termine |
 | 3. Profil utilisateur | Planifie |
 | 4. Categories et modes de paiement | Planifie |
 | 5. Transactions | Planifie |
@@ -108,3 +108,7 @@ Le JWT contient uniquement les claims `sub`, `iat` et `exp` ; son subject contie
 L'authentification Bearer JWT et `GET /api/auth/me` sont implementes et valides avec H2 et MySQL 8. `POST /api/auth/register` et `POST /api/auth/login` restent publics, tandis que `GET /api/auth/me` exige un Bearer JWT valide et retourne uniquement l'utilisateur authentifie. L'API est stateless : le `SecurityFilterChain` desactive les sessions, CSRF, form login et HTTP Basic, puis place `JwtAuthenticationFilter` avant le filtre username/password. Aucun refresh token ni session HTTP n'est utilise.
 
 Pour chaque requete Bearer, la signature, l'expiration et le subject sont verifies, puis `AppUser` est recharge depuis la base. La validation MySQL 8 confirme qu'un passage a `blocked=true` retire immediatement l'acces avec HTTP 401, meme lorsque le JWT a ete emis avant le blocage et reste cryptographiquement valide. Les utilisateurs supprimes ou desactives sont egalement refuses. Le role courant vient uniquement de la base et devient `ROLE_USER` ou `ROLE_ADMIN` dans le `SecurityContext` ; aucun role n'est stocke dans le JWT. Aucun projet Angular ou Python n'est encore initialise.
+
+La phase Authentification et securite est terminee et validee avec H2 et MySQL 8. La chaine `register` -> `login` -> JWT -> Bearer -> `GET /api/auth/me` est operationnelle avec Spring Security stateless pour les roles `USER` et `ADMIN`. L'inscription publique cree toujours uniquement un `USER`. Le JWT HS256 reste minimal avec les claims `sub`, `iat` et `exp` ; le role est absent du token et recharge depuis la base a chaque requete protegee. Un utilisateur bloque, desactive ou supprime est donc refuse avec un ancien JWT encore valide. Aucun refresh token ni session HTTP n'est utilise.
+
+Le premier compte `ADMIN` peut etre cree au demarrage uniquement par un bootstrap optionnel, idempotent et desactive par defaut avec `ADMIN_BOOTSTRAP_ENABLED=false`. Lorsqu'il est active, l'e-mail, le mot de passe, le prenom et le nom proviennent exclusivement des variables `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`, `ADMIN_BOOTSTRAP_FIRST_NAME` et `ADMIN_BOOTSTRAP_LAST_NAME`. Le mot de passe suit exactement la politique de l'inscription et est enregistre uniquement sous forme de hash BCrypt. Le bootstrap, sa validation, son idempotence, le login ADMIN, le JWT et `GET /api/auth/me` ont ete valides avec H2 et MySQL 8. Un ADMIN deja present n'est pas modifie et un `USER` utilisant le meme e-mail n'est jamais promu automatiquement. Aucun ADMIN n'est insere par Flyway et aucun mot de passe ou secret n'est versionne.

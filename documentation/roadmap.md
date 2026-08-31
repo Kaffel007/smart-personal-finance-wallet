@@ -24,8 +24,8 @@ Statuts possibles : `Planifie`, `En cours`, `Termine`.
 - Principales taches : configurer Spring Security, BCrypt, JWT, roles `USER` et `ADMIN`.
 - Resultat attendu : API securisee avec authentification fonctionnelle.
 - Criteres de validation : inscription, connexion et acces aux routes protegees verifies.
-- Avancement : sous-phase `AppUser`, `Role`, repository et migration Flyway V1 terminee et validee avec H2 et MySQL 8 ; sous-phase d'inscription backend avec BCrypt terminee et validee avec H2 et MySQL 8 ; sous-phase 2D1 de verification des identifiants avec `PasswordEncoder.matches()` terminee et validee avec H2 et MySQL 8 ; sous-phase 2D2 de generation JWT HS256 terminee et validee avec H2 et MySQL 8 ; sous-phase 2E d'authentification Bearer JWT et de protection de `GET /api/auth/me` terminee et validee avec H2 et MySQL 8, y compris le refus HTTP 401 d'un ancien JWT apres le blocage de l'utilisateur. Les sous-phases de securite suivantes restent a effectuer.
-- Statut initial : En cours.
+- Avancement : sous-phase `AppUser`, `Role`, repository et migration Flyway V1 terminee et validee avec H2 et MySQL 8 ; inscription backend avec BCrypt terminee et validee avec H2 et MySQL 8 ; verification des identifiants avec `PasswordEncoder.matches()` terminee et validee avec H2 et MySQL 8 ; generation JWT HS256 terminee et validee avec H2 et MySQL 8 ; authentification Bearer JWT et protection de `GET /api/auth/me` terminees et validees avec H2 et MySQL 8 ; sous-phase 2F de consolidation auth/security et bootstrap ADMIN securise terminee et validee avec H2 et MySQL 8. Le bootstrap ADMIN, le login ADMIN, le JWT, `GET /api/auth/me` et l'idempotence apres redemarrage ont ete verifies sur MySQL 8.
+- Statut initial : Termine.
 
 ## 3. Profil utilisateur
 
