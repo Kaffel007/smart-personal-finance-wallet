@@ -101,4 +101,6 @@ La connexion locale a MySQL avec le compte technique `finance_app`, l'applicatio
 
 L'endpoint backend `POST /api/auth/register` est implemente et valide avec H2 et MySQL 8. Il valide et normalise les donnees, attribue obligatoirement le role `USER` et chiffre les mots de passe avec BCrypt avant leur enregistrement. Le stockage du hash BCrypt a ete valide sur la base MySQL reelle et la reponse HTTP ne contient aucune donnee sensible.
 
-La connexion, Spring Security et JWT ne sont pas encore implementes. Aucune securite des endpoints n'est encore active. Aucun projet Angular ou Python n'est encore initialise.
+La verification des identifiants par `POST /api/auth/login` est implementee et validee avec H2 et MySQL 8. La validation sur la base MySQL reelle confirme la normalisation de l'adresse e-mail et la verification du hash BCrypt avec `PasswordEncoder.matches()`. Une connexion valide retourne uniquement le resume public de l'utilisateur, tandis qu'un mauvais mot de passe retourne HTTP 401. Cette connexion temporaire ne genere encore aucun JWT.
+
+Spring Security Web, JWT et la protection des routes ne sont pas encore implementes. Aucun projet Angular ou Python n'est encore initialise.
