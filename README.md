@@ -101,6 +101,8 @@ La connexion locale a MySQL avec le compte technique `finance_app`, l'applicatio
 
 L'endpoint backend `POST /api/auth/register` est implemente et valide avec H2 et MySQL 8. Il valide et normalise les donnees, attribue obligatoirement le role `USER` et chiffre les mots de passe avec BCrypt avant leur enregistrement. Le stockage du hash BCrypt a ete valide sur la base MySQL reelle et la reponse HTTP ne contient aucune donnee sensible.
 
-La verification des identifiants par `POST /api/auth/login` est implementee et validee avec H2 et MySQL 8. La validation sur la base MySQL reelle confirme la normalisation de l'adresse e-mail et la verification du hash BCrypt avec `PasswordEncoder.matches()`. Une connexion valide retourne uniquement le resume public de l'utilisateur, tandis qu'un mauvais mot de passe retourne HTTP 401. Cette connexion temporaire ne genere encore aucun JWT.
+La verification des identifiants par `POST /api/auth/login` et la generation du JWT apres une connexion reussie sont validees avec H2 et MySQL 8. La validation sur la base MySQL reelle confirme la normalisation de l'adresse e-mail, la verification du hash BCrypt avec `PasswordEncoder.matches()` et la generation d'un token signe avec HS256. Une connexion valide retourne le token avec le resume public de l'utilisateur, tandis qu'un mauvais mot de passe retourne HTTP 401.
 
-Spring Security Web, JWT et la protection des routes ne sont pas encore implementes. Aucun projet Angular ou Python n'est encore initialise.
+Le JWT contient uniquement les claims `sub`, `iat` et `exp` ; son subject contient l'identifiant utilisateur. Sa duree est configurable par `JWT_EXPIRATION_MINUTES` et vaut 60 minutes, soit 3600 secondes, par defaut. La cle de signature doit etre fournie en Base64 par la variable d'environnement obligatoire `JWT_SECRET_BASE64` et aucun secret n'est versionne. Aucun refresh token n'est genere.
+
+Spring Security Web et la protection des routes ne sont pas encore implementes : aucun filtre JWT ni `SecurityFilterChain` n'est present, et le JWT retourne n'est pas encore lu depuis le header `Authorization`. Aucun projet Angular ou Python n'est encore initialise.
