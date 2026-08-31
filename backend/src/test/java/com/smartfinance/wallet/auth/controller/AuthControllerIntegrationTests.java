@@ -434,6 +434,33 @@ class AuthControllerIntegrationTests {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void shouldReloadChangedRoleFromDatabaseWithSameToken() throws Exception {
+        AppUser user = saveLoginUser("dynamic-role@example.com", Role.ADMIN, true, false);
+        String token = jwtService.generateToken(user);
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("ADMIN"));
+
+        user.setRole(Role.USER);
+        appUserRepository.saveAndFlush(user);
+
+        mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.role").value("USER"));
+    }
+
+    @Test
+    void shouldNeverExposeUnknownApiRouteWithoutAuthentication() throws Exception {
+        mockMvc.perform(get("/api/future-resource"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+    }
+
     private AppUser saveLoginUser(
             String email,
             Role role,

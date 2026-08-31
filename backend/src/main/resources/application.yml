@@ -31,3 +31,9 @@ app:
   jwt:
     secret-base64: ${JWT_SECRET_BASE64:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
+  admin-bootstrap:
+    enabled: ${ADMIN_BOOTSTRAP_ENABLED:false}
+    email: ${ADMIN_BOOTSTRAP_EMAIL:}
+    password: ${ADMIN_BOOTSTRAP_PASSWORD:}
+    first-name: ${ADMIN_BOOTSTRAP_FIRST_NAME:}
+    last-name: ${ADMIN_BOOTSTRAP_LAST_NAME:}

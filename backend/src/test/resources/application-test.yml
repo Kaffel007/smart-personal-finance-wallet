@@ -16,3 +16,5 @@ app:
   jwt:
     secret-base64: dGVzdC1vbmx5LWZpeHR1cmUta2V5LTMyaW5pbXVtLWJ5dGVzISE=
     expiration-minutes: 60
+  admin-bootstrap:
+    enabled: false
