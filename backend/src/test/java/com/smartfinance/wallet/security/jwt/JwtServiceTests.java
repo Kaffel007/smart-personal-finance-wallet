@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -67,6 +69,57 @@ class JwtServiceTests {
     }
 
     @Test
+    void shouldExtractPositiveUserIdFromValidToken() {
+        JwtService jwtService = new JwtService(TEST_KEY_BASE64, 60);
+        String token = signedToken("21", TEST_KEY_BYTES, Instant.now().plusSeconds(60));
+
+        assertThat(jwtService.getUserIdFromToken(token)).isEqualTo(21L);
+    }
+
+    @Test
+    void shouldRejectTokenWithWrongSignature() {
+        JwtService jwtService = new JwtService(TEST_KEY_BASE64, 60);
+        byte[] otherKey =
+                "another-valid-unit-test-signing-key-32-bytes".getBytes(StandardCharsets.UTF_8);
+        String token = signedToken("21", otherKey, Instant.now().plusSeconds(60));
+
+        assertThatThrownBy(() -> jwtService.getUserIdFromToken(token))
+                .isInstanceOf(SignatureException.class);
+    }
+
+    @Test
+    void shouldRejectExpiredMalformedAndUnsignedTokens() {
+        JwtService jwtService = new JwtService(TEST_KEY_BASE64, 60);
+        String expiredToken = signedToken("21", TEST_KEY_BYTES, Instant.now().minusSeconds(1));
+        String unsignedToken = Jwts.builder().subject("21").compact();
+
+        assertThatThrownBy(() -> jwtService.getUserIdFromToken(expiredToken))
+                .isInstanceOf(io.jsonwebtoken.ExpiredJwtException.class);
+        assertThatThrownBy(() -> jwtService.getUserIdFromToken("malformed-token"))
+                .isInstanceOf(io.jsonwebtoken.JwtException.class);
+        assertThatThrownBy(() -> jwtService.getUserIdFromToken(unsignedToken))
+                .isInstanceOf(io.jsonwebtoken.JwtException.class);
+    }
+
+    @Test
+    void shouldRejectMissingNonNumericOrNonPositiveSubject() {
+        JwtService jwtService = new JwtService(TEST_KEY_BASE64, 60);
+        String missingSubject = Jwts.builder()
+                .issuedAt(new Date())
+                .expiration(Date.from(Instant.now().plusSeconds(60)))
+                .signWith(Keys.hmacShaKeyFor(TEST_KEY_BYTES), Jwts.SIG.HS256)
+                .compact();
+
+        assertThatThrownBy(() -> jwtService.getUserIdFromToken(missingSubject))
+                .isInstanceOf(io.jsonwebtoken.MalformedJwtException.class);
+        for (String subject : Set.of("not-a-number", "0", "-1")) {
+            String token = signedToken(subject, TEST_KEY_BYTES, Instant.now().plusSeconds(60));
+            assertThatThrownBy(() -> jwtService.getUserIdFromToken(token))
+                    .isInstanceOf(io.jsonwebtoken.MalformedJwtException.class);
+        }
+    }
+
+    @Test
     void shouldRejectInvalidBase64WithoutExposingIt() {
         String invalidValue = "not-valid-base64-value";
 
@@ -106,5 +159,14 @@ class JwtServiceTests {
     private Jws<Claims> parse(String token, byte[] keyBytes) {
         SecretKey key = Keys.hmacShaKeyFor(keyBytes);
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+    }
+
+    private String signedToken(String subject, byte[] keyBytes, Instant expiration) {
+        return Jwts.builder()
+                .subject(subject)
+                .issuedAt(new Date())
+                .expiration(Date.from(expiration))
+                .signWith(Keys.hmacShaKeyFor(keyBytes), Jwts.SIG.HS256)
+                .compact();
     }
 }

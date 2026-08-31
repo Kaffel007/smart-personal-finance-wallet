@@ -3,6 +3,7 @@ package com.smartfinance.wallet.auth.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartfinance.wallet.user.entity.AppUser;
+import com.smartfinance.wallet.security.jwt.JwtService;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Base64;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -33,9 +36,11 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.http.HttpHeaders;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -55,6 +60,9 @@ class AuthControllerIntegrationTests {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JwtService jwtService;
 
     @Value("${app.jwt.secret-base64}")
     private String jwtSecretBase64;
@@ -320,6 +328,112 @@ class AuthControllerIntegrationTests {
                 .andExpect(jsonPath("$.path").value("/api/auth/login"));
     }
 
+    @Test
+    void shouldReturnJsonUnauthorizedForMeWithoutTokenAndCreateNoSession() throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message")
+                        .value("Authentification requise ou jeton invalide."))
+                .andExpect(jsonPath("$.path").value("/api/auth/me"))
+                .andExpect(jsonPath("$.fieldErrors").isEmpty())
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andReturn();
+
+        assertThat(result.getRequest().getSession(false)).isNull();
+    }
+
+    @ParameterizedTest
+    @MethodSource("authenticatedRoles")
+    void shouldReturnAuthenticatedUserForValidBearerToken(Role role) throws Exception {
+        AppUser user = saveLoginUser("me-" + role.name().toLowerCase() + "@example.com",
+                role, true, false);
+        String token = jwtService.generateToken(user);
+
+        MvcResult result = mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.firstName").value("Sara"))
+                .andExpect(jsonPath("$.lastName").value("Martin"))
+                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.role").value(role.name()))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
+                .andExpect(jsonPath("$.enabled").doesNotExist())
+                .andExpect(jsonPath("$.blocked").doesNotExist())
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andReturn();
+
+        assertThat(result.getRequest().getSession(false)).isNull();
+    }
+
+    @Test
+    void shouldUseIdentityFromTokenEvenWhenClientSuppliesAnotherId() throws Exception {
+        AppUser userA = saveLoginUser("user-a@example.com", Role.USER, true, false);
+        AppUser userB = saveLoginUser("user-b@example.com", Role.USER, true, false);
+        String tokenA = jwtService.generateToken(userA);
+
+        mockMvc.perform(get("/api/auth/me")
+                        .queryParam("id", userB.getId().toString())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userA.getId()))
+                .andExpect(jsonPath("$.email").value("user-a@example.com"));
+    }
+
+    @Test
+    void shouldRejectMalformedWrongSignatureExpiredAndInvalidSubjectTokens() throws Exception {
+        byte[] otherKey = "integration-wrong-signing-key-at-least-32-bytes"
+                .getBytes(StandardCharsets.UTF_8);
+        String wrongSignature = signedToken("1", otherKey, Instant.now().plusSeconds(60));
+        String expired = signedToken("1", testSigningKey(), Instant.now().minusSeconds(1));
+        String invalidSubject = signedToken("invalid", testSigningKey(), Instant.now().plusSeconds(60));
+
+        for (String token : Set.of("malformed-token", wrongSignature, expired, invalidSubject)) {
+            assertUnauthorizedBearer(token);
+        }
+        assertUnauthorizedBearer("");
+    }
+
+    @ParameterizedTest
+    @MethodSource("unavailableAccountStates")
+    void shouldRejectOldTokenWhenCurrentUserBecomesUnavailable(String state) throws Exception {
+        AppUser user = saveLoginUser("state@example.com", Role.USER, true, false);
+        String token = jwtService.generateToken(user);
+
+        if (state.equals("blocked")) {
+            user.setBlocked(true);
+            appUserRepository.saveAndFlush(user);
+        } else if (state.equals("disabled")) {
+            user.setEnabled(false);
+            appUserRepository.saveAndFlush(user);
+        } else {
+            appUserRepository.deleteById(user.getId());
+            appUserRepository.flush();
+        }
+
+        assertUnauthorizedBearer(token);
+    }
+
+    @Test
+    void shouldRemainStatelessBetweenAuthenticatedAndUnauthenticatedRequests() throws Exception {
+        AppUser user = saveLoginUser("stateless@example.com", Role.USER, true, false);
+        String token = jwtService.generateToken(user);
+
+        MvcResult authenticatedResult = mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(authenticatedResult.getRequest().getSession(false)).isNull();
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
     private AppUser saveLoginUser(
             String email,
             Role role,
@@ -343,6 +457,14 @@ class AuthControllerIntegrationTests {
                 Arguments.of(Role.USER, "LOGIN@EXAMPLE.COM"),
                 Arguments.of(Role.ADMIN, "  LOGIN@EXAMPLE.COM  ")
         );
+    }
+
+    private static Stream<Role> authenticatedRoles() {
+        return Stream.of(Role.USER, Role.ADMIN);
+    }
+
+    private static Stream<String> unavailableAccountStates() {
+        return Stream.of("blocked", "disabled", "deleted");
     }
 
     private static Stream<Arguments> rejectedLoginScenarios() {
@@ -369,5 +491,29 @@ class AuthControllerIntegrationTests {
                   "password": "%s"
                 }
                 """.formatted(email, password);
+    }
+
+    private byte[] testSigningKey() {
+        return Base64.getDecoder().decode(jwtSecretBase64);
+    }
+
+    private String signedToken(String subject, byte[] keyBytes, Instant expiration) {
+        return Jwts.builder()
+                .subject(subject)
+                .issuedAt(new Date())
+                .expiration(Date.from(expiration))
+                .signWith(Keys.hmacShaKeyFor(keyBytes), Jwts.SIG.HS256)
+                .compact();
+    }
+
+    private void assertUnauthorizedBearer(String token) throws Exception {
+        mockMvc.perform(get("/api/auth/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message")
+                        .value("Authentification requise ou jeton invalide."))
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.exception").doesNotExist());
     }
 }

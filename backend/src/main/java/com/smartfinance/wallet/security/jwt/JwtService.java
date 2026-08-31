@@ -2,6 +2,7 @@ package com.smartfinance.wallet.security.jwt;
 
 import com.smartfinance.wallet.user.entity.AppUser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,29 @@ public class JwtService {
 
     public long getExpirationSeconds() {
         return expiration.toSeconds();
+    }
+
+    public long getUserIdFromToken(String token) {
+        String subject = Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+
+        if (subject == null || subject.isBlank()) {
+            throw new MalformedJwtException("Subject JWT invalide.");
+        }
+
+        try {
+            long userId = Long.parseLong(subject);
+            if (userId <= 0) {
+                throw new MalformedJwtException("Subject JWT invalide.");
+            }
+            return userId;
+        } catch (NumberFormatException exception) {
+            throw new MalformedJwtException("Subject JWT invalide.", exception);
+        }
     }
 
     private SecretKey createSigningKey(String secretBase64) {

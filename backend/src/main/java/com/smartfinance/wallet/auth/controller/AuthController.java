@@ -5,13 +5,16 @@ import com.smartfinance.wallet.auth.dto.LoginResponse;
 import com.smartfinance.wallet.auth.dto.RegisterRequest;
 import com.smartfinance.wallet.auth.dto.UserSummaryResponse;
 import com.smartfinance.wallet.auth.service.AuthService;
+import com.smartfinance.wallet.security.AuthenticatedUserPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -36,5 +39,18 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request
     ) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserSummaryResponse> me(
+            @AuthenticationPrincipal AuthenticatedUserPrincipal principal
+    ) {
+        return ResponseEntity.ok(new UserSummaryResponse(
+                principal.id(),
+                principal.firstName(),
+                principal.lastName(),
+                principal.email(),
+                principal.role()
+        ));
     }
 }
