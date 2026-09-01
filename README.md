@@ -74,7 +74,7 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 0. Cadrage et structure | Termine |
 | 1. Initialisation du backend Spring Boot | Termine |
 | 2. Authentification et securite | Termine |
-| 3. Profil utilisateur | Planifie |
+| 3. Categories financieres personnelles | En cours |
 | 4. Categories et modes de paiement | Planifie |
 | 5. Transactions | Planifie |
 | 6. Budgets | Planifie |
@@ -112,3 +112,7 @@ Pour chaque requete Bearer, la signature, l'expiration et le subject sont verifi
 La phase Authentification et securite est terminee et validee avec H2 et MySQL 8. La chaine `register` -> `login` -> JWT -> Bearer -> `GET /api/auth/me` est operationnelle avec Spring Security stateless pour les roles `USER` et `ADMIN`. L'inscription publique cree toujours uniquement un `USER`. Le JWT HS256 reste minimal avec les claims `sub`, `iat` et `exp` ; le role est absent du token et recharge depuis la base a chaque requete protegee. Un utilisateur bloque, desactive ou supprime est donc refuse avec un ancien JWT encore valide. Aucun refresh token ni session HTTP n'est utilise.
 
 Le premier compte `ADMIN` peut etre cree au demarrage uniquement par un bootstrap optionnel, idempotent et desactive par defaut avec `ADMIN_BOOTSTRAP_ENABLED=false`. Lorsqu'il est active, l'e-mail, le mot de passe, le prenom et le nom proviennent exclusivement des variables `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`, `ADMIN_BOOTSTRAP_FIRST_NAME` et `ADMIN_BOOTSTRAP_LAST_NAME`. Le mot de passe suit exactement la politique de l'inscription et est enregistre uniquement sous forme de hash BCrypt. Le bootstrap, sa validation, son idempotence, le login ADMIN, le JWT et `GET /api/auth/me` ont ete valides avec H2 et MySQL 8. Un ADMIN deja present n'est pas modifie et un `USER` utilisant le meme e-mail n'est jamais promu automatiquement. Aucun ADMIN n'est insere par Flyway et aucun mot de passe ou secret n'est versionne.
+
+La phase 3 est en cours et la sous-phase 3A consacree aux categories financieres personnelles est terminee et validee avec H2 et MySQL 8. Le module `Category` prend en charge les types `INCOME` et `EXPENSE` avec le CRUD protege complet : `POST`, `GET`, `GET /{id}`, `PUT /{id}` et `DELETE /{id}` sous `/api/categories`. La liste peut etre filtree par type. Chaque categorie appartient obligatoirement a l'utilisateur authentifie par JWT, y compris lorsqu'il possede le role `ADMIN`.
+
+Le nom est nettoye et une valeur interne `normalizedName` en minuscules garantit l'unicite `(user_id, type, normalized_name)` dans le service et la base. Cette valeur et le proprietaire ne sont jamais exposes dans les DTO publics. L'isolation est stricte : les tentatives `GET`, `PUT` ou `DELETE` sur la categorie d'un autre utilisateur retournent HTTP 404 sans reveler son existence. Aucune categorie par defaut n'est creee. Le module Transaction n'est pas encore commence.

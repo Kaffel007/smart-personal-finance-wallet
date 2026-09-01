@@ -27,13 +27,14 @@ Statuts possibles : `Planifie`, `En cours`, `Termine`.
 - Avancement : sous-phase `AppUser`, `Role`, repository et migration Flyway V1 terminee et validee avec H2 et MySQL 8 ; inscription backend avec BCrypt terminee et validee avec H2 et MySQL 8 ; verification des identifiants avec `PasswordEncoder.matches()` terminee et validee avec H2 et MySQL 8 ; generation JWT HS256 terminee et validee avec H2 et MySQL 8 ; authentification Bearer JWT et protection de `GET /api/auth/me` terminees et validees avec H2 et MySQL 8 ; sous-phase 2F de consolidation auth/security et bootstrap ADMIN securise terminee et validee avec H2 et MySQL 8. Le bootstrap ADMIN, le login ADMIN, le JWT, `GET /api/auth/me` et l'idempotence apres redemarrage ont ete verifies sur MySQL 8.
 - Statut initial : Termine.
 
-## 3. Profil utilisateur
+## 3. Categories financieres personnelles
 
-- Objectif : permettre la gestion du profil et des preferences.
-- Principales taches : endpoints profil, devise principale, modification du mot de passe.
-- Resultat attendu : utilisateur capable de consulter et modifier ses informations.
-- Criteres de validation : isolation des donnees utilisateur et validation des champs.
-- Statut initial : Planifie.
+- Objectif : permettre a chaque utilisateur de gerer ses categories `INCOME` et `EXPENSE`.
+- Principales taches : CRUD protege, filtre par type, normalisation des noms et isolation stricte par utilisateur.
+- Resultat attendu : categories personnelles disponibles pour les futurs modules financiers.
+- Criteres de validation : identite issue du JWT, aucun acces croise, unicite `(user, type, normalizedName)`, Flyway V2 et erreurs HTTP propres.
+- Avancement : sous-phase 3A Categories terminee et validee avec H2 et MySQL 8, incluant le CRUD, le filtre par type, l'unicite normalisee et l'isolation multi-utilisateur. La sous-phase 3B Transactions n'est pas commencee ; les budgets et objectifs d'epargne ne sont pas commences.
+- Statut initial : En cours.
 
 ## 4. Categories et modes de paiement
 

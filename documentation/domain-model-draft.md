@@ -1,6 +1,6 @@
 # Brouillon du modele metier
 
-Ce document est une premiere version textuelle du modele metier. Il ne correspond pas encore a des entites Java ni a des tables MySQL.
+Ce document conserve les perspectives du modele metier. `AppUser`, `Role` et `Category` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
 
 ## AppUser
 
@@ -18,10 +18,10 @@ Ce document est une premiere version textuelle du modele metier. Il ne correspon
 
 ## Category
 
-- Role : classe les transactions.
-- Attributs envisages : id, name, type, global, color, icon, active, createdAt.
-- Relations principales : peut appartenir a un `AppUser` si elle est personnelle, peut etre utilisee par plusieurs `FinancialTransaction` et `Budget`.
-- Regles metier : seules les categories personnelles peuvent etre modifiees par leur proprietaire, seules les categories globales sont gerees par l'admin.
+- Role : classe les futures transactions personnelles.
+- Attributs implementes : id, user, name, normalizedName, type, createdAt, updatedAt.
+- Relations principales : appartient obligatoirement a un `AppUser` par une relation `ManyToOne` lazy.
+- Regles metier : types `INCOME` et `EXPENSE`, unicite `(user, type, normalizedName)`, acces et modifications limites au proprietaire authentifie. `normalizedName` est interne et n'est pas expose.
 
 ## PaymentMethod
 
