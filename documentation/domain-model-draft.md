@@ -1,6 +1,6 @@
 # Brouillon du modele metier
 
-Ce document conserve les perspectives du modele metier. `AppUser`, `Role` et `Category` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
+Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Category`, `CategoryType` et `FinancialTransaction` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
 
 ## AppUser
 
@@ -33,9 +33,9 @@ Ce document conserve les perspectives du modele metier. `AppUser`, `Role` et `Ca
 ## FinancialTransaction
 
 - Role : represente un revenu ou une depense.
-- Attributs envisages : id, amount, type, transactionDate, description, createdAt, updatedAt.
-- Relations principales : appartient a un `AppUser`, une `Category` et eventuellement un `PaymentMethod`.
-- Regles metier : montant strictement positif, type `INCOME` ou `EXPENSE`, date et categorie obligatoires, revenu augmente le solde, depense reduit le solde.
+- Attributs implementes : id, user, category, type, amount, transactionDate, description, createdAt, updatedAt.
+- Relations principales : appartient obligatoirement a un `AppUser` et une `Category` par des relations `ManyToOne` lazy.
+- Regles metier : montant `BigDecimal` strictement positif avec une precision `DECIMAL(19,4)`, date obligatoire non future, description optionnelle limitee a 255 caracteres. Le proprietaire vient de l'identite JWT et la categorie doit lui appartenir. Le type `INCOME` ou `EXPENSE` est derive de la categorie et stocke ; il n'est jamais fourni comme source metier par le client. L'acces est strictement limite au proprietaire, y compris pour `ADMIN`.
 
 ## Budget
 

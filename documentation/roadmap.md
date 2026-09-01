@@ -33,7 +33,7 @@ Statuts possibles : `Planifie`, `En cours`, `Termine`.
 - Principales taches : CRUD protege, filtre par type, normalisation des noms et isolation stricte par utilisateur.
 - Resultat attendu : categories personnelles disponibles pour les futurs modules financiers.
 - Criteres de validation : identite issue du JWT, aucun acces croise, unicite `(user, type, normalizedName)`, Flyway V2 et erreurs HTTP propres.
-- Avancement : sous-phase 3A Categories terminee et validee avec H2 et MySQL 8, incluant le CRUD, le filtre par type, l'unicite normalisee et l'isolation multi-utilisateur. La sous-phase 3B Transactions n'est pas commencee ; les budgets et objectifs d'epargne ne sont pas commences.
+- Avancement : sous-phase 3A Categories terminee et validee avec H2 et MySQL 8, incluant le CRUD, le filtre par type, l'unicite normalisee et l'isolation multi-utilisateur. Sous-phase 3B Transactions terminee et validee avec H2 et MySQL 8 : migration Flyway V3, CRUD protege, filtres par type et categorie seuls ou combines, montant `BigDecimal`, type derive de la categorie, isolation multi-utilisateur et protection des categories utilisees. Les sous-phases suivantes, les budgets et les objectifs d'epargne ne sont pas commences.
 - Statut initial : En cours.
 
 ## 4. Categories et modes de paiement
