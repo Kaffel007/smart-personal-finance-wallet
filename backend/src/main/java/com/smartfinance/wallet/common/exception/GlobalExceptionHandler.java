@@ -2,6 +2,8 @@ package com.smartfinance.wallet.common.exception;
 
 import com.smartfinance.wallet.category.exception.CategoryAlreadyExistsException;
 import com.smartfinance.wallet.category.exception.CategoryNotFoundException;
+import com.smartfinance.wallet.category.exception.CategoryInUseException;
+import com.smartfinance.wallet.transaction.exception.FinancialTransactionNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,6 +101,20 @@ public class GlobalExceptionHandler {
                 request.getRequestURI(),
                 Map.of()
         );
+    }
+
+    @ExceptionHandler(CategoryInUseException.class)
+    public ResponseEntity<ApiErrorResponse> handleCategoryInUse(
+            CategoryInUseException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(),
+                request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(FinancialTransactionNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleFinancialTransactionNotFound(
+            FinancialTransactionNotFoundException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(),
+                request.getRequestURI(), Map.of());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

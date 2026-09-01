@@ -7,10 +7,12 @@ import com.smartfinance.wallet.category.entity.Category;
 import com.smartfinance.wallet.category.entity.CategoryType;
 import com.smartfinance.wallet.category.exception.CategoryAlreadyExistsException;
 import com.smartfinance.wallet.category.exception.CategoryNotFoundException;
+import com.smartfinance.wallet.category.exception.CategoryInUseException;
 import com.smartfinance.wallet.category.repository.CategoryRepository;
 import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
+import com.smartfinance.wallet.transaction.repository.FinancialTransactionRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,6 +44,9 @@ class CategoryServiceTests {
 
     @Mock
     private AppUserRepository appUserRepository;
+
+    @Mock
+    private FinancialTransactionRepository financialTransactionRepository;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -199,6 +204,35 @@ class CategoryServiceTests {
         verify(categoryRepository).flush();
         assertThatThrownBy(() -> categoryService.deleteCategory(99L, 8L))
                 .isInstanceOf(CategoryNotFoundException.class);
+    }
+
+    @Test
+    void shouldRejectDeletingUsedCategory() {
+        Category category = category(user(USER_ID), 8L, "Transport", CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(8L, USER_ID)).thenReturn(Optional.of(category));
+        when(financialTransactionRepository.existsByCategoryId(8L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.deleteCategory(USER_ID, 8L))
+                .isInstanceOf(CategoryInUseException.class);
+        verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    void shouldRejectTypeChangeButAllowRenameForUsedCategory() {
+        Category category = category(user(USER_ID), 8L, "Transport", CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(8L, USER_ID)).thenReturn(Optional.of(category));
+        when(financialTransactionRepository.existsByCategoryId(8L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.updateCategory(
+                USER_ID, 8L, new UpdateCategoryRequest("Salaire", CategoryType.INCOME)))
+                .isInstanceOf(CategoryInUseException.class);
+
+        when(categoryRepository.existsByUserIdAndTypeAndNormalizedNameAndIdNot(
+                USER_ID, CategoryType.EXPENSE, "transport quotidien", 8L)).thenReturn(false);
+        when(categoryRepository.saveAndFlush(category)).thenReturn(category);
+        CategoryResponse renamed = categoryService.updateCategory(
+                USER_ID, 8L, new UpdateCategoryRequest("Transport quotidien", CategoryType.EXPENSE));
+        assertThat(renamed.name()).isEqualTo("Transport quotidien");
     }
 
     private AppUser user(Long id) {

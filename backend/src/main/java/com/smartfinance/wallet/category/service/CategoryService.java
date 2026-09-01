@@ -7,7 +7,9 @@ import com.smartfinance.wallet.category.entity.Category;
 import com.smartfinance.wallet.category.entity.CategoryType;
 import com.smartfinance.wallet.category.exception.CategoryAlreadyExistsException;
 import com.smartfinance.wallet.category.exception.CategoryNotFoundException;
+import com.smartfinance.wallet.category.exception.CategoryInUseException;
 import com.smartfinance.wallet.category.repository.CategoryRepository;
+import com.smartfinance.wallet.transaction.repository.FinancialTransactionRepository;
 import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -22,13 +24,16 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final AppUserRepository appUserRepository;
+    private final FinancialTransactionRepository financialTransactionRepository;
 
     public CategoryService(
             CategoryRepository categoryRepository,
-            AppUserRepository appUserRepository
+            AppUserRepository appUserRepository,
+            FinancialTransactionRepository financialTransactionRepository
     ) {
         this.categoryRepository = categoryRepository;
         this.appUserRepository = appUserRepository;
+        this.financialTransactionRepository = financialTransactionRepository;
     }
 
     @Transactional
@@ -68,6 +73,10 @@ public class CategoryService {
             UpdateCategoryRequest request
     ) {
         Category category = findOwnedCategory(userId, categoryId);
+        if (category.getType() != request.type()
+                && financialTransactionRepository.existsByCategoryId(categoryId)) {
+            throw new CategoryInUseException();
+        }
         String name = cleanName(request.name());
         String normalizedName = normalizeName(name);
         if (categoryRepository.existsByUserIdAndTypeAndNormalizedNameAndIdNot(
@@ -88,6 +97,9 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(Long userId, Long categoryId) {
         Category category = findOwnedCategory(userId, categoryId);
+        if (financialTransactionRepository.existsByCategoryId(categoryId)) {
+            throw new CategoryInUseException();
+        }
         categoryRepository.delete(category);
         categoryRepository.flush();
     }
