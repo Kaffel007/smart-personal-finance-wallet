@@ -1,6 +1,6 @@
 # Brouillon du modele metier
 
-Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Category`, `CategoryType` et `FinancialTransaction` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
+Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Category`, `CategoryType`, `FinancialTransaction` et `Budget` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
 
 ## AppUser
 
@@ -40,9 +40,9 @@ Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Cate
 ## Budget
 
 - Role : definit une limite de depense mensuelle.
-- Attributs envisages : id, name, amountLimit, month, year, alertThresholdPercent, createdAt, updatedAt.
-- Relations principales : appartient a un `AppUser`, peut etre lie a une `Category`.
-- Regles metier : pas de doublon pour la meme categorie et la meme periode, calcul du montant depense et restant a partir des transactions.
+- Attributs implementes : id, user, category, year, month, amount, createdAt, updatedAt.
+- Relations principales : appartient obligatoirement a un `AppUser` et une `Category` `EXPENSE` par des relations `ManyToOne` lazy.
+- Regles metier : montant `BigDecimal` strictement positif avec une precision `DECIMAL(19,4)`, annee comprise entre 2000 et 2100, mois compris entre 1 et 12 et unicite `(user, category, year, month)`. `spent`, `remaining` et `usagePercent` sont calcules dynamiquement depuis les transactions `EXPENSE` du proprietaire pour la categorie et la periode ; ils ne sont pas persistants. Le restant peut etre negatif et le pourcentage peut depasser 100. L'acces est strictement limite au proprietaire, y compris pour `ADMIN`.
 
 ## SavingsGoal
 
