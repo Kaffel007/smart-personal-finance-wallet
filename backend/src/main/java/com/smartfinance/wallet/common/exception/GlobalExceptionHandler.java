@@ -7,6 +7,7 @@ import com.smartfinance.wallet.transaction.exception.FinancialTransactionNotFoun
 import com.smartfinance.wallet.budget.exception.BudgetAlreadyExistsException;
 import com.smartfinance.wallet.budget.exception.BudgetCategoryTypeException;
 import com.smartfinance.wallet.budget.exception.BudgetNotFoundException;
+import com.smartfinance.wallet.savingsgoal.exception.SavingsGoalNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -136,6 +137,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleBudgetCategoryType(
             BudgetCategoryTypeException exception, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(SavingsGoalNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleSavingsGoalNotFound(
+            SavingsGoalNotFoundException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), Map.of());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
