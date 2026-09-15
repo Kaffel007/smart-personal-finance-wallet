@@ -1,6 +1,6 @@
 # Brouillon du modele metier
 
-Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Category`, `CategoryType`, `FinancialTransaction` et `Budget` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
+Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Category`, `CategoryType`, `FinancialTransaction`, `Budget` et `SavingsGoal` correspondent desormais a des entites ou enums Java persistants ; les autres sections restent prospectives.
 
 ## AppUser
 
@@ -47,16 +47,16 @@ Ce document conserve les perspectives du modele metier. `AppUser`, `Role`, `Cate
 ## SavingsGoal
 
 - Role : represente un objectif d'epargne.
-- Attributs envisages : id, name, targetAmount, currentAmount, deadline, status, createdAt, completedAt.
-- Relations principales : appartient a un `AppUser`, possede plusieurs `SavingsContribution`.
-- Regles metier : objectif termine automatiquement lorsque le montant cible est atteint.
+- Attributs implementes : id, user, name, targetAmount, savedAmount, targetDate, createdAt, updatedAt.
+- Relations principales : appartient obligatoirement a un `AppUser` par une relation `ManyToOne` lazy.
+- Regles metier : nom obligatoire nettoye et limite a 120 caracteres, `targetAmount` strictement positif, `savedAmount` positif ou nul, montants `BigDecimal` en `DECIMAL(19,4)` et date cible optionnelle. `remainingAmount` et `progressPercent` sont calcules dynamiquement et ne sont pas persistants ; le restant peut etre negatif et la progression peut depasser 100 %. Le proprietaire vient exclusivement du JWT et l'acces est strictement limite a celui-ci, y compris pour `ADMIN`.
 
 ## SavingsContribution
 
 - Role : represente une contribution ajoutee a un objectif d'epargne.
 - Attributs envisages : id, amount, contributionDate, note, createdAt.
 - Relations principales : appartient a un `SavingsGoal`.
-- Regles metier : montant non negatif, met a jour la progression de l'objectif.
+- Regles metier envisagees : montant non negatif, met a jour la progression de l'objectif. Cette entite n'est pas implementee dans le MVP de la phase 3D.
 
 ## Notification
 
