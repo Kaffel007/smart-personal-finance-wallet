@@ -129,7 +129,7 @@ class FinancialTransactionControllerIntegrationTests {
         AppUser user=user("category-use@example.test",Role.USER);
         Category category=category(user,"Transport",CategoryType.EXPENSE); tx(user,category,"5",LocalDate.now());
         mockMvc.perform(auth(delete("/api/categories/"+category.getId()),user)).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Cette catégorie est utilisée par des transactions."));
+                .andExpect(jsonPath("$.message").value("Cette catégorie est utilisée par des données financières."));
         mockMvc.perform(auth(put("/api/categories/"+category.getId()),user).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Transport quotidien\",\"type\":\"EXPENSE\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Transport quotidien"));

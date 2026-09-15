@@ -4,6 +4,9 @@ import com.smartfinance.wallet.category.exception.CategoryAlreadyExistsException
 import com.smartfinance.wallet.category.exception.CategoryNotFoundException;
 import com.smartfinance.wallet.category.exception.CategoryInUseException;
 import com.smartfinance.wallet.transaction.exception.FinancialTransactionNotFoundException;
+import com.smartfinance.wallet.budget.exception.BudgetAlreadyExistsException;
+import com.smartfinance.wallet.budget.exception.BudgetCategoryTypeException;
+import com.smartfinance.wallet.budget.exception.BudgetNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,6 +118,24 @@ public class GlobalExceptionHandler {
             FinancialTransactionNotFoundException exception, HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(),
                 request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(BudgetNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleBudgetNotFound(
+            BudgetNotFoundException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(BudgetAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBudgetAlreadyExists(
+            BudgetAlreadyExistsException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(BudgetCategoryTypeException.class)
+    public ResponseEntity<ApiErrorResponse> handleBudgetCategoryType(
+            BudgetCategoryTypeException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(), Map.of());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)

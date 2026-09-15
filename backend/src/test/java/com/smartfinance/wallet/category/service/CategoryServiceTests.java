@@ -13,6 +13,7 @@ import com.smartfinance.wallet.user.entity.AppUser;
 import com.smartfinance.wallet.user.entity.Role;
 import com.smartfinance.wallet.user.repository.AppUserRepository;
 import com.smartfinance.wallet.transaction.repository.FinancialTransactionRepository;
+import com.smartfinance.wallet.budget.repository.BudgetRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,6 +48,9 @@ class CategoryServiceTests {
 
     @Mock
     private FinancialTransactionRepository financialTransactionRepository;
+
+    @Mock
+    private BudgetRepository budgetRepository;
 
     @InjectMocks
     private CategoryService categoryService;
@@ -233,6 +237,21 @@ class CategoryServiceTests {
         CategoryResponse renamed = categoryService.updateCategory(
                 USER_ID, 8L, new UpdateCategoryRequest("Transport quotidien", CategoryType.EXPENSE));
         assertThat(renamed.name()).isEqualTo("Transport quotidien");
+    }
+
+    @Test
+    void shouldProtectCategoryUsedByBudget() {
+        Category category = category(user(USER_ID), 8L, "Transport", CategoryType.EXPENSE);
+        when(categoryRepository.findByIdAndUserId(8L, USER_ID)).thenReturn(Optional.of(category));
+        when(financialTransactionRepository.existsByCategoryId(8L)).thenReturn(false);
+        when(budgetRepository.existsByCategoryId(8L)).thenReturn(true);
+
+        assertThatThrownBy(() -> categoryService.deleteCategory(USER_ID, 8L))
+                .isInstanceOf(CategoryInUseException.class)
+                .hasMessage("Cette catégorie est utilisée par des données financières.");
+        assertThatThrownBy(() -> categoryService.updateCategory(
+                USER_ID, 8L, new UpdateCategoryRequest("Transport", CategoryType.INCOME)))
+                .isInstanceOf(CategoryInUseException.class);
     }
 
     private AppUser user(Long id) {
