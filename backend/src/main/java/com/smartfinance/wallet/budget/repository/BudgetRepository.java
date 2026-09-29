@@ -4,6 +4,7 @@ import com.smartfinance.wallet.budget.entity.Budget;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import java.util.*;
+import java.math.BigDecimal;
 
 public interface BudgetRepository extends JpaRepository<Budget, Long> {
     Optional<Budget> findByIdAndUserId(Long id, Long userId);
@@ -21,4 +22,20 @@ public interface BudgetRepository extends JpaRepository<Budget, Long> {
             """)
     List<Budget> findAllFiltered(@Param("userId") Long userId, @Param("year") Integer year,
             @Param("month") Integer month, @Param("categoryId") Long categoryId);
+
+    @Query("""
+            select coalesce(sum(b.amount), 0) from Budget b
+            where b.user.id = :userId and b.year = :year and b.month = :month
+            """)
+    BigDecimal sumAmountByUserAndPeriod(@Param("userId") Long userId,
+            @Param("year") int year, @Param("month") int month);
+
+    long countByUserIdAndYearAndMonth(Long userId, int year, int month);
+
+    @Query("""
+            select b.category.id from Budget b
+            where b.user.id = :userId and b.year = :year and b.month = :month
+            """)
+    Set<Long> findCategoryIdsByUserAndPeriod(@Param("userId") Long userId,
+            @Param("year") int year, @Param("month") int month);
 }

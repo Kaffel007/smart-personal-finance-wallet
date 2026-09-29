@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface FinancialTransactionRepository extends JpaRepository<FinancialTransaction, Long> {
     Optional<FinancialTransaction> findByIdAndUserId(Long id, Long userId);
@@ -26,4 +27,32 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
             """)
     BigDecimal sumExpenses(@Param("userId") Long userId, @Param("categoryId") Long categoryId,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            select coalesce(sum(t.amount), 0) from FinancialTransaction t
+            where t.user.id = :userId and t.type = :type
+              and t.transactionDate >= :startDate and t.transactionDate < :endDate
+            """)
+    BigDecimal sumByUserAndTypeAndPeriod(@Param("userId") Long userId,
+            @Param("type") CategoryType type, @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            select count(t) from FinancialTransaction t
+            where t.user.id = :userId
+              and t.transactionDate >= :startDate and t.transactionDate < :endDate
+            """)
+    long countByUserAndPeriod(@Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            select coalesce(sum(t.amount), 0) from FinancialTransaction t
+            where t.user.id = :userId
+              and t.type = com.smartfinance.wallet.category.entity.CategoryType.EXPENSE
+              and t.category.id in :categoryIds
+              and t.transactionDate >= :startDate and t.transactionDate < :endDate
+            """)
+    BigDecimal sumExpensesByCategoriesAndPeriod(@Param("userId") Long userId,
+            @Param("categoryIds") Set<Long> categoryIds, @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
