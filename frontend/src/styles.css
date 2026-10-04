@@ -1,0 +1,59 @@
+﻿:root { font-family: 'Segoe UI', Arial, sans-serif; color: #182c38; background: #f3f6f8; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+a { color: #116b61; text-underline-offset: 3px; }
+button, input { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: wait; opacity: .65; }
+:focus-visible { outline: 3px solid #d69538; outline-offset: 3px; }
+h1 { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.15; letter-spacing: -.04em; margin: 1rem 0; }
+h2 { font-size: 1.7rem; margin: .5rem 0 1rem; }
+p { line-height: 1.6; }
+.brand { display: block; font-size: 1.15rem; font-weight: 750; text-decoration: none; line-height: 1.5; }
+.eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .15em; color: #116b61; }
+.muted, .field-help { color: #556775; }
+.auth-shell { min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; }
+.auth-intro { padding: clamp(2rem, 6vw, 6rem); background: #123b39; color: #fff; display: flex; flex-direction: column; justify-content: center; }
+.auth-intro .brand { color: #fff; margin-bottom: 4rem; }
+.auth-intro .eyebrow { color: #a4dace; }
+.auth-intro > p:last-child { color: #c8deda; max-width: 28rem; }
+.auth-card { width: min(100% - 4rem, 29rem); margin: 3rem auto; align-self: center; background: white; padding: 2rem; border-radius: 1.25rem; border: 1px solid #dfe7eb; box-shadow: 0 12px 40px #182c3808; }
+form { margin-top: 1.75rem; }
+label { display: block; font-size: .9rem; font-weight: 600; margin: 1.2rem 0 .5rem; }
+input { width: 100%; min-height: 46px; padding: .7rem .9rem; border: 1px solid #b9c9d0; border-radius: .5rem; background: #fff; color: #182c38; }
+input[aria-invalid=true] { border-color: #aa3333; }
+.field-help, .field-error { font-size: .8rem; margin: .4rem 0; }
+.field-error { color: #9d2929; }
+.error-banner { padding: .8rem 1rem; border-radius: .5rem; background: #fff0ef; color: #9d2929; }
+.primary { background: #116b61; color: white; border: 0; padding: .85rem 1.1rem; border-radius: .5rem; font-weight: 650; }
+form .primary { width: 100%; margin-top: 1.5rem; }
+.auth-footer { font-size: .85rem; text-align: center; margin-top: 1.5rem; }
+.app-shell { min-height: 100dvh; display: grid; grid-template-columns: 260px minmax(0, 1fr); }
+.sidebar { background: #123b39; padding: 2rem 1.5rem; color: white; display: flex; flex-direction: column; gap: 2.5rem; }
+.sidebar .brand { color: white; }
+nav { display: flex; flex-direction: column; gap: .5rem; }
+nav a, .nav-pending { padding: .9rem; border-radius: .5rem; font-size: .9rem; }
+nav a { color: #fff; text-decoration: none; }
+nav .active { background: #24534f; }
+.nav-pending { color: #c0d4d1; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.nav-pending small { font-size: .65rem; border: 1px solid #567c77; border-radius: 4px; padding: 2px 5px; }
+.logout { margin-top: auto; text-align: left; background: transparent; color: white; border: 1px solid #678984; border-radius: .5rem; padding: .8rem; }
+.workspace-header { min-height: 80px; background: white; border-bottom: 1px solid #dfe7eb; padding: 1.5rem 2.5rem; display: flex; justify-content: space-between; gap: 1rem; }
+.workspace-content { max-width: 1200px; padding: 2.5rem; }
+.workspace-content h1 { font-size: 2.2rem; }
+.dashboard-placeholder { margin-top: 2rem; padding: 4rem 2rem; background: white; border: 1px solid #dfe7eb; border-radius: 1rem; text-align: center; color: #556775; }
+.dashboard-placeholder h2 { color: #182c38; font-size: 1.35rem; }
+.placeholder-symbol { width: 60px; height: 60px; display: grid; place-items: center; margin: 0 auto 1.5rem; border-radius: 50%; background: #e8f4f0; color: #116b61; font-size: 1.8rem; }
+@media (max-width: 760px) {
+  .auth-shell, .app-shell { grid-template-columns: 1fr; }
+  .auth-intro { padding: 2rem; }
+  .auth-intro .brand { margin-bottom: 1rem; }
+  .auth-intro h1 { font-size: 2rem; }
+  .auth-card { width: calc(100% - 2rem); margin: 1rem auto 2rem; padding: 1.5rem; }
+  .sidebar { padding: 1.5rem; gap: 1.5rem; }
+  nav { flex-direction: row; flex-wrap: wrap; }
+  .logout { align-self: flex-start; }
+  .workspace-header, .workspace-content { padding: 1.5rem; }
+  .dashboard-placeholder { padding: 2rem 1rem; }
+}
