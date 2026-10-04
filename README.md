@@ -77,8 +77,8 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 3A Categories / 3B Transactions / 3C Budgets | Termines |
 | 3D Savings Goals / 3E Dashboard backend | Termines |
 | 4. Frontend Angular | En cours |
-| 4A Fondation et authentification | Implementee |
-| 4B Dashboard frontend | Non commencee |
+| 4A Fondation et authentification | Terminee et validee navigateur |
+| 4B Dashboard frontend | Implementee/testee Angular ; validation navigateur a faire |
 | Interfaces CRUD metier | Non commencees |
 | Administration, notifications, export et ML | Planifies |
 
@@ -145,8 +145,8 @@ L'interceptor ajoute Authorization Bearer uniquement aux endpoints proteges de
 l'API configuree et supprime la session en cas de reponse 401 protegee. Le guard
 protege `/dashboard` ; le backend reste responsable de l'autorisation et de
 l'isolation des donnees. Le layout responsive contient la navigation et logout.
-Les rubriques metier sont marquees a venir sans liens casses. Le dashboard affiche
-le prenom et un contenu provisoire sans appeler `/api/dashboard/summary`.
+Les rubriques metier sont marquees a venir sans liens casses. Le dashboard est
+maintenant connecte aux statistiques en phase 4B.
 La racine et les routes inconnues redirigent vers dashboard si un token existe,
 sinon vers login. Le profil est recharge apres un rafraichissement.
 
@@ -160,12 +160,34 @@ URL frontend : http://localhost:4200. Backend attendu : http://localhost:8080.
 L'URL API http://localhost:8080/api est centralisee dans
 `frontend/src/app/core/api.config.ts`.
 
-Validation : `npm run build` reussi ; `npm test -- --watch=false` : 16 tests reussis.
-Tests HTTP simules ; le backend local etait indisponible sur le port 8080 :
-le parcours reel et CORS n'ont pas ete testes. SecurityConfig ne configure pas
-actuellement CORS pour le frontend ; les appels directs depuis le navigateur
-pourront necessiter une configuration backend autorisee dans une etape ulterieure.
-Le backend, MySQL et les migrations restent inchanges.
+La phase 4A et le CORS dev ont ete valides dans le navigateur par l'utilisateur.
+Le backend attendu sur localhost:8080 doit utiliser le profil Spring dev pour
+autoriser l'origine http://localhost:4200.
 
-Details : [frontend/README.md](frontend/README.md). La phase 4B et les interfaces
-CRUD ne sont pas commencees. Aucun commit ni push effectue.
+Details : [frontend/README.md](frontend/README.md). Les interfaces CRUD metier
+ne sont pas commencees.
+
+## Frontend — Phase 4B Dashboard
+
+Le vrai dashboard Angular appelle GET /api/dashboard/summary avec year et month.
+Il selectionne initialement la periode courante du navigateur, puis propose les
+mois francais et une plage d'annees autour de l'annee courante (limites 2000..2100).
+Un changement recharge les donnees et annule une requete precedente obsolete.
+
+Les quatre cartes affichent revenus, depenses, solde et nombre de transactions.
+Les sections affichent les budgets mensuels et les objectifs d'epargne globaux,
+avec montants, compteurs et pourcentages fournis directement par le backend.
+Les barres sont plafonnees visuellement a 100 %, tandis que les pourcentages reels
+et les restants negatifs sont conserves. Les depassements sont signales.
+Aucune devise effective n'est definie : format francais et suffixe neutre
+« unités » centralise dans le pipe FinancialAmountPipe.
+
+Le dashboard reste responsive (4/2/1 cartes selon la largeur), avec labels,
+progress bars accessibles, chargement, erreur generique et bouton Reessayer.
+Sans donnees, les cartes a zero restent visibles avec les messages appropries.
+Aucune librairie graphique ni dependance n'a ete ajoutee.
+
+Validation : npm test -- --watch=false : 29 tests reussis ; npm run build reussi.
+La validation navigateur reelle du dashboard 4B reste a effectuer.
+Aucun fichier backend, migration ou MySQL modifie pendant cette phase.
+Aucun commit ni push ; aucune phase 4C commencee.

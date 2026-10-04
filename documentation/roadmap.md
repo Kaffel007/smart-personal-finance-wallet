@@ -1,4 +1,4 @@
-﻿# Roadmap
+# Roadmap
 
 Statuts : `Planifie`, `En cours`, `Termine`, `Non commence`.
 
@@ -30,19 +30,27 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 
 ## 4. Frontend Angular — En cours
 
-### 4A Fondation et authentification — Implementee
+### 4A Fondation et authentification — Terminee
 
 - Angular 22.2.1 standalone, Router, HttpClient, Reactive Forms et RxJS.
 - URL API centralisee : http://localhost:8080/api.
 - Login/register, JWT localStorage, utilisateur courant, interceptor Bearer et guard.
 - Layout responsive, logout et dashboard provisoire protege.
 - Build production reussi ; 16 tests automatises reussis.
-- Validation contre le backend reel et CORS a effectuer : serveur indisponible pendant cette phase.
+- Validation navigateur reelle et CORS dev terminee, confirmee par l'utilisateur. Le backend autorise localhost:4200 avec le profil dev.
 - Aucun changement backend, aucune migration, aucun appel aux statistiques dashboard.
 
-### 4B Dashboard — Non commence
+### 4B Dashboard — Implementee et testee Angular
 
-Connexion a /api/dashboard/summary et affichage des statistiques apres validation explicite.
+- DashboardSummary et DashboardService relies a GET /api/dashboard/summary?year=YYYY&month=MM.
+- Periode courante du navigateur, selection mois/annee, limites 2000..2100.
+- Revenus, depenses, solde et transactions ; budgets mensuels et epargne globale.
+- Progression fournie par le backend, depassements visibles, barres plafonnees a 100 %.
+- Format francais avec suffixe neutre centralise : aucune devise effective definie.
+- Responsive, accessibilite, loading, erreur/retry et etats sans donnees.
+- Build production reussi ; 29 tests Angular reussis, dont 13 nouveaux tests dashboard.
+- Validation navigateur reelle du dashboard encore a faire.
+- Backend, migrations, MySQL et dependances inchanges.
 
 ### Interfaces metier — Non commencees
 
@@ -63,4 +71,4 @@ Integration complete frontend/backend a valider progressivement, notamment les p
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 4A s'arrete ici. Aucun commit ni push ; aucune phase 4B commencee.
+La phase 4B s'arrete ici. Aucun commit ni push pour cette phase ; aucune phase 4C commencee.
