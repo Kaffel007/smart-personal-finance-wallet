@@ -37,7 +37,7 @@ Le projet est developpe progressivement dans le cadre du PFA. La premiere versio
 
 ## Technologies prevues
 
-- Frontend : Angular, TypeScript, HTML, CSS ou SCSS, Angular Material.
+- Frontend : Angular 22.2.1 standalone, TypeScript, HTML et CSS. Aucune bibliotheque UI ajoutee en phase 4A.
 - Graphiques : Chart.js avec ng2-charts.
 - Backend : Java 21, Spring Boot 3, API REST, Spring Data JPA, Spring Security, JWT, BCrypt, Maven.
 - Base de donnees : MySQL 8, base `smart_finance_wallet`, utilisateur technique `finance_app`.
@@ -72,30 +72,21 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | Phase | Statut |
 | --- | --- |
 | 0. Cadrage et structure | Termine |
-| 1. Initialisation du backend Spring Boot | Termine |
-| 2. Authentification et securite | Termine |
-| 3. Categories financieres personnelles | En cours |
-| 4. Categories et modes de paiement | Planifie |
-| 5. Transactions | Planifie |
-| 6. Budgets | Planifie |
-| 7. Objectifs d'epargne | Planifie |
-| 8. Dashboard utilisateur | Planifie |
-| 9. Administration | Planifie |
-| 10. Notifications et recommandations statistiques | Planifie |
-| 11. Export CSV | Planifie |
-| 12. Initialisation du frontend Angular | Planifie |
-| 13. Authentification frontend | Planifie |
-| 14. Interfaces utilisateur | Planifie |
-| 15. Interfaces administrateur | Planifie |
-| 16. Integration frontend/backend | Planifie |
-| 17. Module Machine Learning Python | Planifie |
-| 18. Integration Spring Boot/FastAPI | Planifie |
-| 19. Tests, securite et optimisation | Planifie |
-| 20. Documentation finale et preparation de la demonstration | Planifie |
+| 1. Initialisation backend | Termine |
+| 2. Authentification et securite backend | Termine |
+| 3A Categories / 3B Transactions / 3C Budgets | Termines |
+| 3D Savings Goals / 3E Dashboard backend | Termines |
+| 4. Frontend Angular | En cours |
+| 4A Fondation et authentification | Implementee |
+| 4B Dashboard frontend | Non commencee |
+| Interfaces CRUD metier | Non commencees |
+| Administration, notifications, export et ML | Planifies |
+
+La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
 
 ## Etat actuel
 
-La phase 1 est terminee et la phase 2 est en cours. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
+Le backend MVP (phases 1, 2 et 3A a 3E) est termine ; la phase 4 Frontend est en cours. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
@@ -107,7 +98,7 @@ Le JWT contient uniquement les claims `sub`, `iat` et `exp` ; son subject contie
 
 L'authentification Bearer JWT et `GET /api/auth/me` sont implementes et valides avec H2 et MySQL 8. `POST /api/auth/register` et `POST /api/auth/login` restent publics, tandis que `GET /api/auth/me` exige un Bearer JWT valide et retourne uniquement l'utilisateur authentifie. L'API est stateless : le `SecurityFilterChain` desactive les sessions, CSRF, form login et HTTP Basic, puis place `JwtAuthenticationFilter` avant le filtre username/password. Aucun refresh token ni session HTTP n'est utilise.
 
-Pour chaque requete Bearer, la signature, l'expiration et le subject sont verifies, puis `AppUser` est recharge depuis la base. La validation MySQL 8 confirme qu'un passage a `blocked=true` retire immediatement l'acces avec HTTP 401, meme lorsque le JWT a ete emis avant le blocage et reste cryptographiquement valide. Les utilisateurs supprimes ou desactives sont egalement refuses. Le role courant vient uniquement de la base et devient `ROLE_USER` ou `ROLE_ADMIN` dans le `SecurityContext` ; aucun role n'est stocke dans le JWT. Aucun projet Angular ou Python n'est encore initialise.
+Pour chaque requete Bearer, la signature, l'expiration et le subject sont verifies, puis `AppUser` est recharge depuis la base. La validation MySQL 8 confirme qu'un passage a `blocked=true` retire immediatement l'acces avec HTTP 401, meme lorsque le JWT a ete emis avant le blocage et reste cryptographiquement valide. Les utilisateurs supprimes ou desactives sont egalement refuses. Le role courant vient uniquement de la base et devient `ROLE_USER` ou `ROLE_ADMIN` dans le `SecurityContext` ; aucun role n'est stocke dans le JWT. Le frontend Angular est maintenant initialise ; aucun projet Python n'est initialise.
 
 La phase Authentification et securite est terminee et validee avec H2 et MySQL 8. La chaine `register` -> `login` -> JWT -> Bearer -> `GET /api/auth/me` est operationnelle avec Spring Security stateless pour les roles `USER` et `ADMIN`. L'inscription publique cree toujours uniquement un `USER`. Le JWT HS256 reste minimal avec les claims `sub`, `iat` et `exp` ; le role est absent du token et recharge depuis la base a chaque requete protegee. Un utilisateur bloque, desactive ou supprime est donc refuse avec un ancien JWT encore valide. Aucun refresh token ni session HTTP n'est utilise.
 
@@ -140,3 +131,41 @@ La sous-phase 3E Dashboard & statistiques est terminee et validee avec H2 et MyS
 La synthese des transactions expose `totalIncome`, `totalExpense`, `balance` et `transactionCount` pour le mois demande. La synthese des budgets expose `totalBudget`, `budgetSpent`, `budgetRemaining`, `budgetUsagePercent` et `budgetCount` ; seules les depenses des categories budgetees sont comptees, sans double comptage. La synthese globale des objectifs expose `totalSavingsTarget`, `totalSavingsSaved`, `savingsRemaining`, `savingsProgressPercent` et `savingsGoalCount`. Tous les montants utilisent `BigDecimal`, les pourcentages sont calcules a deux decimales, et les restants negatifs ainsi que les progressions superieures a 100 % sont autorises.
 
 Le dashboard ne possede aucune entite ni table : ses donnees proviennent de calculs dynamiques et d'agregations SQL/JPA sur les transactions, budgets et objectifs d'epargne existants. L'absence de donnees retourne des montants, comptes et pourcentages a zero. Le module, son endpoint JWT, ses validations et son isolation multi-utilisateur sont valides avec H2 et MySQL 8. Le test MySQL 8 a confirme la synthese complete avec HTTP 200 et l'isolation stricte : les donnees d'un utilisateur restent invisibles aux autres. Aucune migration V6, dependance Maven, interface frontend, fonctionnalite ML ou notification n'a ete ajoutee.
+
+## Frontend — Phase 4A
+
+La fondation Angular 22.2.1 standalone et l'authentification sont implementees.
+Les routes publiques `/login` et `/register` utilisent des formulaires reactifs.
+Le login appelle `/api/auth/login`, stocke uniquement `accessToken` dans
+localStorage sous `smart_finance_access_token`, puis recupere le profil avec
+`/api/auth/me`. L'inscription appelle `/api/auth/register` puis redirige vers login.
+Aucun mot de passe ni secret JWT n'est stocke dans le frontend.
+
+L'interceptor ajoute Authorization Bearer uniquement aux endpoints proteges de
+l'API configuree et supprime la session en cas de reponse 401 protegee. Le guard
+protege `/dashboard` ; le backend reste responsable de l'autorisation et de
+l'isolation des donnees. Le layout responsive contient la navigation et logout.
+Les rubriques metier sont marquees a venir sans liens casses. Le dashboard affiche
+le prenom et un contenu provisoire sans appeler `/api/dashboard/summary`.
+La racine et les routes inconnues redirigent vers dashboard si un token existe,
+sinon vers login. Le profil est recharge apres un rafraichissement.
+
+```powershell
+cd frontend
+npm ci
+npm start
+```
+
+URL frontend : http://localhost:4200. Backend attendu : http://localhost:8080.
+L'URL API http://localhost:8080/api est centralisee dans
+`frontend/src/app/core/api.config.ts`.
+
+Validation : `npm run build` reussi ; `npm test -- --watch=false` : 16 tests reussis.
+Tests HTTP simules ; le backend local etait indisponible sur le port 8080 :
+le parcours reel et CORS n'ont pas ete testes. SecurityConfig ne configure pas
+actuellement CORS pour le frontend ; les appels directs depuis le navigateur
+pourront necessiter une configuration backend autorisee dans une etape ulterieure.
+Le backend, MySQL et les migrations restent inchanges.
+
+Details : [frontend/README.md](frontend/README.md). La phase 4B et les interfaces
+CRUD ne sont pas commencees. Aucun commit ni push effectue.

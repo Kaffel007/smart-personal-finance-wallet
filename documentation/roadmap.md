@@ -1,173 +1,66 @@
-# Roadmap
+﻿# Roadmap
 
-Statuts possibles : `Planifie`, `En cours`, `Termine`.
+Statuts : `Planifie`, `En cours`, `Termine`, `Non commence`.
 
-## 0. Cadrage et structure
+## 0. Cadrage et structure — Termine
 
-- Objectif : creer la structure generale du depot et la documentation initiale.
-- Principales taches : creer les dossiers principaux, ajouter les fichiers de cadrage, definir les regles permanentes.
-- Resultat attendu : depot organise et pret pour les futures initialisations.
-- Criteres de validation : arborescence conforme, aucun projet technique initialise, aucun secret reel enregistre.
-- Statut initial : Termine.
+Structure du depot, documentation initiale et regles de travail.
 
-## 1. Initialisation du backend Spring Boot
+## 1. Initialisation backend — Termine
 
-- Objectif : initialiser le backend Java Spring Boot.
-- Principales taches : creer le projet Spring Boot, configurer Maven, preparer la configuration par variables d'environnement.
-- Resultat attendu : backend minimal demarrable.
-- Criteres de validation : compilation Maven reussie et demarrage local possible.
-- Statut initial : Termine.
+Spring Boot, Java 21, Maven, MySQL 8 et Flyway. Configuration par variables d'environnement.
 
-## 2. Authentification et securite
+## 2. Authentification et securite backend — Termine
 
-- Objectif : mettre en place l'inscription, la connexion et la securite JWT.
-- Principales taches : configurer Spring Security, BCrypt, JWT, roles `USER` et `ADMIN`.
-- Resultat attendu : API securisee avec authentification fonctionnelle.
-- Criteres de validation : inscription, connexion et acces aux routes protegees verifies.
-- Avancement : sous-phase `AppUser`, `Role`, repository et migration Flyway V1 terminee et validee avec H2 et MySQL 8 ; inscription backend avec BCrypt terminee et validee avec H2 et MySQL 8 ; verification des identifiants avec `PasswordEncoder.matches()` terminee et validee avec H2 et MySQL 8 ; generation JWT HS256 terminee et validee avec H2 et MySQL 8 ; authentification Bearer JWT et protection de `GET /api/auth/me` terminees et validees avec H2 et MySQL 8 ; sous-phase 2F de consolidation auth/security et bootstrap ADMIN securise terminee et validee avec H2 et MySQL 8. Le bootstrap ADMIN, le login ADMIN, le JWT, `GET /api/auth/me` et l'idempotence apres redemarrage ont ete verifies sur MySQL 8.
-- Statut initial : Termine.
+AppUser, roles USER/ADMIN, BCrypt, inscription, login JWT, Bearer et GET /api/auth/me.
+Securite stateless, isolation utilisateur et bootstrap ADMIN securise.
+Validation H2 et MySQL 8 effectuee lors des phases backend.
 
-## 3. Categories financieres personnelles
+## 3. Modules backend MVP — Termine
 
-- Objectif : permettre a chaque utilisateur de gerer ses categories `INCOME` et `EXPENSE`.
-- Principales taches : CRUD protege, filtre par type, normalisation des noms et isolation stricte par utilisateur.
-- Resultat attendu : categories personnelles disponibles pour les futurs modules financiers.
-- Criteres de validation : identite issue du JWT, aucun acces croise, unicite `(user, type, normalizedName)`, Flyway V2 et erreurs HTTP propres.
-- Avancement : sous-phase 3A Categories terminee et validee avec H2 et MySQL 8, incluant le CRUD, le filtre par type, l'unicite normalisee et l'isolation multi-utilisateur. Sous-phase 3B Transactions terminee et validee avec H2 et MySQL 8 : migration Flyway V3, CRUD protege, filtres, montant `BigDecimal`, type derive de la categorie et isolation multi-utilisateur. Sous-phase 3C Budgets mensuels terminee et validee avec H2 et MySQL 8 : migration Flyway V4, CRUD et filtres, categories `EXPENSE` uniquement, unicite par utilisateur/categorie/periode, progression calculee dynamiquement depuis les transactions et protection des categories utilisees. Sous-phase 3D Objectifs d'epargne terminee et validee avec H2 et MySQL 8 : migration Flyway V5, CRUD protege, montants `BigDecimal`, date cible optionnelle, restant et progression calcules dynamiquement, depassement de 100 % autorise et isolation stricte. Sous-phase 3E Dashboard & statistiques terminee et validee avec H2 et MySQL 8 : synthese mensuelle des transactions et budgets, synthese globale des objectifs d'epargne, agregations dynamiques et isolation stricte par utilisateur. Les sous-phases suivantes ne sont pas commencees.
-- Statut initial : En cours.
+| Sous-phase | Perimetre | Statut |
+| --- | --- | --- |
+| 3A Categories | CRUD personnel, type, unicite normalisee, isolation utilisateur, Flyway V2 | Termine |
+| 3B Transactions | CRUD FinancialTransaction, filtres, BigDecimal, isolation, Flyway V3 | Termine |
+| 3C Budgets | CRUD mensuel, categories EXPENSE, progression dynamique, Flyway V4 | Termine |
+| 3D Savings Goals | CRUD, montants, date cible, progression dynamique, Flyway V5 | Termine |
+| 3E Dashboard | Synthese mensuelle, agregations dynamiques, isolation utilisateur | Termine |
 
-## 4. Categories et modes de paiement
+Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 
-- Objectif : gerer les categories et modes de paiement globaux ou personnels.
-- Principales taches : CRUD categories personnelles, categories globales admin, modes de paiement globaux.
-- Resultat attendu : referentiels metier disponibles pour les transactions.
-- Criteres de validation : seuls les admins gerent les valeurs globales, les utilisateurs gerent leurs valeurs personnelles.
-- Statut initial : Planifie.
+## 4. Frontend Angular — En cours
 
-## 5. Transactions
+### 4A Fondation et authentification — Implementee
 
-- Objectif : gerer les revenus et depenses.
-- Principales taches : CRUD `FinancialTransaction`, filtres par type, categorie, date et montant.
-- Resultat attendu : historique financier exploitable.
-- Criteres de validation : montant strictement positif, type obligatoire, categorie obligatoire, isolation par utilisateur.
-- Statut initial : Planifie.
+- Angular 22.2.1 standalone, Router, HttpClient, Reactive Forms et RxJS.
+- URL API centralisee : http://localhost:8080/api.
+- Login/register, JWT localStorage, utilisateur courant, interceptor Bearer et guard.
+- Layout responsive, logout et dashboard provisoire protege.
+- Build production reussi ; 16 tests automatises reussis.
+- Validation contre le backend reel et CORS a effectuer : serveur indisponible pendant cette phase.
+- Aucun changement backend, aucune migration, aucun appel aux statistiques dashboard.
 
-## 6. Budgets
+### 4B Dashboard — Non commence
 
-- Objectif : suivre les budgets mensuels et par categorie.
-- Principales taches : CRUD budget, calcul depense/restant, seuils d'alerte.
-- Resultat attendu : suivi budgetaire mensuel.
-- Criteres de validation : unicite categorie/periode, calculs corrects, alertes generees.
-- Statut initial : Planifie.
+Connexion a /api/dashboard/summary et affichage des statistiques apres validation explicite.
 
-## 7. Objectifs d'epargne
+### Interfaces metier — Non commencees
 
-- Objectif : suivre les objectifs et contributions.
-- Principales taches : CRUD objectifs, ajout de contributions, progression, fermeture automatique.
-- Resultat attendu : objectifs d'epargne suivis dans l'application.
-- Criteres de validation : contribution non negative, objectif termine lorsque la cible est atteinte.
-- Statut initial : Planifie.
+Categories, transactions, budgets et objectifs d'epargne : services, formulaires, listes et filtres.
+Integration complete frontend/backend a valider progressivement, notamment les parcours reels et CORS.
 
-## 8. Dashboard utilisateur
+## Phases futures — Planifiees
 
-- Objectif : afficher les indicateurs financiers principaux.
-- Principales taches : solde, revenus du mois, depenses du mois, epargne, graphiques, dernieres transactions.
-- Resultat attendu : vue synthetique des finances personnelles.
-- Criteres de validation : indicateurs coherents avec les donnees en base.
-- Statut initial : Planifie.
+- Referentiels globaux et modes de paiement : gestion admin et restrictions de roles.
+- Contributions aux objectifs d'epargne et evolutions des modules metier.
+- Administration : utilisateurs, blocage/deblocage, categories globales, parametres et journal.
+  Aucun acces aux mots de passe ni modification des transactions privees par un administrateur.
+- Notifications et recommandations statistiques : alertes budgets et anomalies par regles.
+- Export CSV : donnees strictement limitees a l'utilisateur authentifie.
+- Interfaces administrateur : routes protegees et parcours de supervision.
+- Machine Learning Python/FastAPI : analyse, prediction et integration Spring Boot dans une phase avancee.
+- Tests, securite et optimisation : parcours de bout en bout, isolation et performances.
+- Documentation finale et preparation de la demonstration PFA.
+- Flutter : perspective future uniquement.
 
-## 9. Administration
-
-- Objectif : fournir un espace admin securise.
-- Principales taches : liste utilisateurs, recherche, blocage/deblocage, categories globales, statistiques, journal admin.
-- Resultat attendu : supervision de la plateforme.
-- Criteres de validation : admin sans acces aux mots de passe ni modification des transactions privees.
-- Statut initial : Planifie.
-
-## 10. Notifications et recommandations statistiques
-
-- Objectif : generer des alertes et recommandations simples.
-- Principales taches : alertes budget, alertes objectifs, depenses inhabituelles par regles statistiques.
-- Resultat attendu : premieres fonctionnalites intelligentes sans modele ML avance.
-- Criteres de validation : recommandations seulement avec historique suffisant.
-- Statut initial : Planifie.
-
-## 11. Export CSV
-
-- Objectif : exporter les transactions.
-- Principales taches : export CSV avec filtres et controle d'acces.
-- Resultat attendu : fichier CSV exploitable.
-- Criteres de validation : donnees limitees a l'utilisateur connecte.
-- Statut initial : Planifie.
-
-## 12. Initialisation du frontend Angular
-
-- Objectif : initialiser l'application Angular.
-- Principales taches : creation du projet, structure core/shared/features, Angular Material, configuration de base.
-- Resultat attendu : frontend demarrable.
-- Criteres de validation : installation reussie et application locale accessible.
-- Statut initial : Planifie.
-
-## 13. Authentification frontend
-
-- Objectif : connecter l'interface aux endpoints d'authentification.
-- Principales taches : pages login/register, stockage token, guards, interceptor JWT.
-- Resultat attendu : parcours d'authentification complet.
-- Criteres de validation : connexion, deconnexion et protection des routes fonctionnelles.
-- Statut initial : Planifie.
-
-## 14. Interfaces utilisateur
-
-- Objectif : developper les vues utilisateur.
-- Principales taches : dashboard, transactions, budgets, objectifs, profil, notifications.
-- Resultat attendu : espace utilisateur utilisable.
-- Criteres de validation : workflows principaux testables depuis l'interface.
-- Statut initial : Planifie.
-
-## 15. Interfaces administrateur
-
-- Objectif : developper les vues admin.
-- Principales taches : utilisateurs, categories globales, modes de paiement, statistiques, journal.
-- Resultat attendu : espace admin utilisable.
-- Criteres de validation : routes admin protegees et actions controlees.
-- Statut initial : Planifie.
-
-## 16. Integration frontend/backend
-
-- Objectif : stabiliser les echanges entre Angular et Spring Boot.
-- Principales taches : services Angular, DTO coherents, gestion d'erreurs, tests manuels.
-- Resultat attendu : application web connectee au backend.
-- Criteres de validation : principaux parcours fonctionnels de bout en bout.
-- Statut initial : Planifie.
-
-## 17. Module Machine Learning Python
-
-- Objectif : initialiser le module Python avance.
-- Principales taches : structure FastAPI, preparation des donnees, premieres fonctions d'analyse.
-- Resultat attendu : service ML minimal pret pour integration.
-- Criteres de validation : API FastAPI demarrable avec endpoints de test.
-- Statut initial : Planifie.
-
-## 18. Integration Spring Boot/FastAPI
-
-- Objectif : connecter le backend au service ML.
-- Principales taches : client REST, appels prediction/anomalies/recommandations, gestion indisponibilite service.
-- Resultat attendu : backend capable d'exploiter les resultats ML.
-- Criteres de validation : integration testee avec service ML local.
-- Statut initial : Planifie.
-
-## 19. Tests, securite et optimisation
-
-- Objectif : renforcer la qualite globale.
-- Principales taches : tests unitaires/integration, verification securite, optimisation requetes et performances.
-- Resultat attendu : application plus fiable et robuste.
-- Criteres de validation : tests verts et points de securite critiques verifies.
-- Statut initial : Planifie.
-
-## 20. Documentation finale et preparation de la demonstration
-
-- Objectif : preparer la livraison PFA.
-- Principales taches : README final, guide installation, scenarios de demonstration, limites et perspectives.
-- Resultat attendu : projet pret a presenter.
-- Criteres de validation : documentation claire et demonstration reproductible.
-- Statut initial : Planifie.
+La phase 4A s'arrete ici. Aucun commit ni push ; aucune phase 4B commencee.
