@@ -1,0 +1,34 @@
+﻿:host { display: block; }
+.dashboard-heading, .section-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.period-selector { display: flex; gap: .8rem; }
+.period-selector label { margin: 0 0 .5rem; }
+select { font: inherit; color: #182c38; background: white; min-height: 44px; padding: .65rem .8rem; border: 1px solid #b9c9d0; border-radius: .5rem; }
+.period-caption, .section-note { color: #556775; font-size: .85rem; }
+.metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.metric-card, .detail-card, .state-card { background: white; border: 1px solid #dfe7eb; border-radius: 1rem; padding: 1.5rem; min-width: 0; }
+.metric-card { border-top: 4px solid #b9c9d0; }
+.metric-card h2 { font-size: .95rem; font-weight: 600; margin: 0; }
+.metric-value { font-size: clamp(1.1rem, 1.6vw, 1.6rem); font-weight: 750; line-height: 1.5; margin: 1rem 0 .25rem; overflow-wrap: anywhere; }
+.metric-caption { color: #556775; font-size: .8rem; margin: 0; }
+.income, .positive { border-top-color: #116b61; }
+.income .metric-value, .positive .metric-value, .goal-exceeded { color: #116b61; }
+.expense, .negative { border-top-color: #aa3333; }
+.expense .metric-value, .negative .metric-value, .over-limit { color: #9d2929; }
+.neutral { border-top-color: #556775; background: #f9fbfc; }
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.detail-card h2 { font-size: 1.1rem; margin: 0; }
+.section-heading { flex-wrap: wrap; }
+.section-heading span { font-size: .8rem; color: #556775; }
+dl { margin: 1.5rem 0; }
+dl > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .7rem 0; border-bottom: 1px solid #edf1f3; }
+dt { color: #556775; font-size: .9rem; }
+dd { margin: 0; font-weight: 650; overflow-wrap: anywhere; }
+.progress-caption { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .65rem; font-size: .9rem; }
+.progress-track { height: 10px; background: #e4ece9; border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: #116b61; }
+.exceeded .progress-fill { background: #aa3333; }
+.empty-message { padding: 1rem; background: #e8f4f0; color: #18534c; border-radius: .7rem; }
+.state-card { margin-top: 1.5rem; }
+@media (max-width: 1150px) { .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .detail-grid { grid-template-columns: 1fr; } }
+@media (max-width: 950px) { .dashboard-heading { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 520px) { .metric-grid { grid-template-columns: 1fr; } .period-selector { width: 100%; } .period-selector > div { flex: 1; min-width: 0; } select { width: 100%; } }

@@ -1,0 +1,89 @@
+﻿<div class="dashboard-heading">
+  <div>
+    <p class="eyebrow">VUE D'ENSEMBLE</p>
+    <h1>Tableau de bord</h1>
+    <p class="muted">Bienvenue {{ auth.currentUser()?.firstName }}.</p>
+  </div>
+  <div class="period-selector" role="group" aria-label="Période du tableau de bord">
+    <div><label for="dashboard-month">Mois</label>
+      <select id="dashboard-month" (change)="changeMonth($event)">
+        @for (name of months; track $index) { <option [value]="$index + 1" [selected]="month() === $index + 1">{{ name }}</option> }
+      </select>
+    </div>
+    <div><label for="dashboard-year">Année</label>
+      <select id="dashboard-year" (change)="changeYear($event)">
+        @for (option of years; track option) { <option [value]="option" [selected]="year() === option">{{ option }}</option> }
+      </select>
+    </div>
+  </div>
+</div>
+<div class="dashboard-results" [attr.aria-busy]="loading()">
+  @if (loading()) {
+    <p class="state-card" role="status">Chargement du tableau de bord…</p>
+  } @else if (error()) {
+    <div class="state-card">
+      <p class="error-banner" role="alert">Impossible de charger le tableau de bord.</p>
+      <button class="primary" type="button" (click)="retry()">Réessayer</button>
+    </div>
+  } @else if (summary(); as data) {
+    <p class="period-caption">{{ months[data.month - 1] }} {{ data.year }} · Revenus, dépenses et budgets du mois</p>
+    @if (data.transactionCount === 0 && data.budgetCount === 0 && data.savingsGoalCount === 0) {
+      <p class="empty-message" role="status">Aucune donnée financière pour cette période.</p>
+    }
+    <div class="metric-grid">
+      <section class="metric-card income" aria-labelledby="income-title">
+        <h2 id="income-title">Revenus</h2><p class="metric-value" data-testid="income">{{ data.totalIncome | financialAmount }}</p>
+        <p class="metric-caption">Entrées du mois</p>
+      </section>
+      <section class="metric-card expense" aria-labelledby="expense-title">
+        <h2 id="expense-title">Dépenses</h2><p class="metric-value" data-testid="expense">{{ data.totalExpense | financialAmount }}</p>
+        <p class="metric-caption">Sorties du mois</p>
+      </section>
+      <section class="metric-card" [class.positive]="data.balance > 0" [class.negative]="data.balance < 0" [class.neutral]="data.balance === 0" aria-labelledby="balance-title">
+        <h2 id="balance-title">Solde</h2><p class="metric-value" data-testid="balance">{{ data.balance | financialAmount }}</p>
+        <p class="metric-caption">{{ data.balance > 0 ? 'Solde positif' : data.balance < 0 ? 'Solde négatif' : 'Solde nul' }}</p>
+      </section>
+      <section class="metric-card" aria-labelledby="transactions-title">
+        <h2 id="transactions-title">Transactions</h2><p class="metric-value" data-testid="transactions">{{ data.transactionCount }}</p>
+        <p class="metric-caption">Opérations du mois</p>
+      </section>
+    </div>
+    <div class="detail-grid">
+      <section class="detail-card" aria-labelledby="budget-title">
+        <div class="section-heading"><h2 id="budget-title">Budgets du mois</h2><span>{{ data.budgetCount }} budget(s)</span></div>
+        <dl>
+          <div><dt>Budget total</dt><dd>{{ data.totalBudget | financialAmount }}</dd></div>
+          <div><dt>Dépensé</dt><dd>{{ data.budgetSpent | financialAmount }}</dd></div>
+          <div><dt>Restant</dt><dd [class.over-limit]="data.budgetRemaining < 0">{{ data.budgetRemaining | financialAmount }}</dd></div>
+        </dl>
+        @if (data.totalBudget === 0) {
+          <p class="muted">Aucun budget défini pour cette période.</p>
+        } @else {
+          <div class="progress-caption"><span>Utilisation</span><strong data-testid="budget-percent">{{ formatPercent(data.budgetUsagePercent) }}</strong></div>
+          <div class="progress-track" [class.exceeded]="data.budgetUsagePercent > 100" role="progressbar" aria-label="Utilisation du budget" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressWidth(data.budgetUsagePercent)" [attr.aria-valuetext]="formatPercent(data.budgetUsagePercent)">
+            <div class="progress-fill" [style.width.%]="progressWidth(data.budgetUsagePercent)"></div>
+          </div>
+          @if (data.budgetUsagePercent > 100) { <p class="over-limit">Budget dépassé.</p> }
+        }
+      </section>
+      <section class="detail-card" aria-labelledby="savings-title">
+        <div class="section-heading"><h2 id="savings-title">Objectifs d'épargne</h2><span>{{ data.savingsGoalCount }} objectif(s)</span></div>
+        <p class="section-note">Progression globale, toutes périodes confondues.</p>
+        <dl>
+          <div><dt>Cible totale</dt><dd>{{ data.totalSavingsTarget | financialAmount }}</dd></div>
+          <div><dt>Montant épargné</dt><dd>{{ data.totalSavingsSaved | financialAmount }}</dd></div>
+          <div><dt>Restant</dt><dd>{{ data.savingsRemaining | financialAmount }}</dd></div>
+        </dl>
+        @if (data.savingsGoalCount === 0) {
+          <p class="muted">Aucun objectif d'épargne pour le moment.</p>
+        } @else {
+          <div class="progress-caption"><span>Progression globale</span><strong data-testid="savings-percent">{{ formatPercent(data.savingsProgressPercent) }}</strong></div>
+          <div class="progress-track" role="progressbar" aria-label="Progression de l'épargne" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressWidth(data.savingsProgressPercent)" [attr.aria-valuetext]="formatPercent(data.savingsProgressPercent)">
+            <div class="progress-fill" [style.width.%]="progressWidth(data.savingsProgressPercent)"></div>
+          </div>
+          @if (data.savingsProgressPercent > 100) { <p class="goal-exceeded">Cible globale d'épargne dépassée.</p> }
+        }
+      </section>
+    </div>
+  }
+</div>

@@ -11,6 +11,9 @@ import { passwordValidator } from './auth.validators';
 import { routes } from '../app.routes';
 import { LoginComponent } from '../features/auth/login.component';
 import { RegisterComponent } from '../features/auth/register.component';
+import { of } from 'rxjs';
+import { DashboardService } from '../features/dashboard/dashboard.service';
+import { summaryFixture } from '../features/dashboard/dashboard.test-data';
 
 const user = { id: 1, firstName: 'Test', lastName: 'User', email: 'test@example.test', role: 'USER' as const };
 const testToken = 'synthetic-test-token';
@@ -103,7 +106,9 @@ describe('Password policy matches backend Unicode limits', () => {
 describe('Private routes and forms', () => {
   beforeEach(() => {
     localStorage.clear();
-    TestBed.configureTestingModule({ providers: [provideRouter(routes), provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({ providers: [provideRouter(routes), provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting(),
+      { provide: DashboardService, useValue: { getSummary: () => of(summaryFixture) } },
+    ] });
   });
   afterEach(() => { TestBed.inject(HttpTestingController).verify(); localStorage.clear(); });
 
