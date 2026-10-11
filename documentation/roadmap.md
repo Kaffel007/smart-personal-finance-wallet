@@ -40,7 +40,7 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Validation navigateur reelle et CORS dev terminee, confirmee par l'utilisateur. Le backend autorise localhost:4200 avec le profil dev.
 - Aucun changement backend, aucune migration, aucun appel aux statistiques dashboard.
 
-### 4B Dashboard — Implementee et testee Angular
+### 4B Dashboard — Terminee
 
 - DashboardSummary et DashboardService relies a GET /api/dashboard/summary?year=YYYY&month=MM.
 - Periode courante du navigateur, selection mois/annee, limites 2000..2100.
@@ -49,13 +49,28 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Format francais avec suffixe neutre centralise : aucune devise effective definie.
 - Responsive, accessibilite, loading, erreur/retry et etats sans donnees.
 - Build production reussi ; 29 tests Angular reussis, dont 13 nouveaux tests dashboard.
-- Validation navigateur reelle du dashboard encore a faire.
+- Validation navigateur reelle et correction de la synchronisation mois/annee terminees, confirmees par l'utilisateur.
 - Backend, migrations, MySQL et dependances inchanges.
 
-### Interfaces metier — Non commencees
+### 4C Transactions et categories — Implementee et testee Angular
 
-Categories, transactions, budgets et objectifs d'epargne : services, formulaires, listes et filtres.
-Integration complete frontend/backend a valider progressivement, notamment les parcours reels et CORS.
+- Routes privees /transactions et /categories, navigation et AuthGuard.
+- CategoryService : CRUD et filtre type ; modeles conformes au backend.
+- Categories : revenus/depenses, creation, renommage/type, suppression confirmee.
+- Gestion claire des doublons 409, categories utilisees 409 et erreurs 404/general.
+- TransactionService : CRUD, filtres type/categoryId combinables et reset.
+- Formulaire reactif : categorie filtree par type visuel, montant positif, date non future, description.
+- Payload sans userId ni type ; type derive par le backend uniquement.
+- Creation/modification/suppression confirmee, feedback et actualisation des listes.
+- Styles responsive, chargements, erreurs, etats vides et accessibilite.
+- Aucune dependance ajoutee ; JWT/interceptor existants reutilises.
+- Validation : 88 tests Angular reussis et build de production reussi.
+- Validation navigateur reelle de 4C restante.
+- Backend, migrations, MySQL et CORS inchanges.
+
+### 4D Budgets UI — Non commencee
+
+### 4E Savings Goals UI — Non commencee
 
 ## Phases futures — Planifiees
 
@@ -71,4 +86,4 @@ Integration complete frontend/backend a valider progressivement, notamment les p
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 4B s'arrete ici. Aucun commit ni push pour cette phase ; aucune phase 4C commencee.
+La phase 4C s'arrete ici. Aucun commit ni push pour cette phase ; aucune phase 4D commencee.

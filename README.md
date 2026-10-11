@@ -78,8 +78,9 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 3D Savings Goals / 3E Dashboard backend | Termines |
 | 4. Frontend Angular | En cours |
 | 4A Fondation et authentification | Terminee et validee navigateur |
-| 4B Dashboard frontend | Implementee/testee Angular ; validation navigateur a faire |
-| Interfaces CRUD metier | Non commencees |
+| 4B Dashboard frontend | Terminee et validee navigateur |
+| 4C Transactions et categories frontend | Implementee/testee Angular ; validation navigateur restante |
+| 4D Budgets UI / 4E Savings Goals UI | Non commencees |
 | Administration, notifications, export et ML | Planifies |
 
 La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
@@ -145,7 +146,7 @@ L'interceptor ajoute Authorization Bearer uniquement aux endpoints proteges de
 l'API configuree et supprime la session en cas de reponse 401 protegee. Le guard
 protege `/dashboard` ; le backend reste responsable de l'autorisation et de
 l'isolation des donnees. Le layout responsive contient la navigation et logout.
-Les rubriques metier sont marquees a venir sans liens casses. Le dashboard est
+Transactions et categories sont accessibles ; budgets et objectifs restent a venir. Le dashboard est
 maintenant connecte aux statistiques en phase 4B.
 La racine et les routes inconnues redirigent vers dashboard si un token existe,
 sinon vers login. Le profil est recharge apres un rafraichissement.
@@ -164,8 +165,7 @@ La phase 4A et le CORS dev ont ete valides dans le navigateur par l'utilisateur.
 Le backend attendu sur localhost:8080 doit utiliser le profil Spring dev pour
 autoriser l'origine http://localhost:4200.
 
-Details : [frontend/README.md](frontend/README.md). Les interfaces CRUD metier
-ne sont pas commencees.
+Details : [frontend/README.md](frontend/README.md). Transactions et categories sont implementees en 4C ; budgets et objectifs UI restent a venir.
 
 ## Frontend — Phase 4B Dashboard
 
@@ -188,6 +188,35 @@ Sans donnees, les cartes a zero restent visibles avec les messages appropries.
 Aucune librairie graphique ni dependance n'a ete ajoutee.
 
 Validation : npm test -- --watch=false : 29 tests reussis ; npm run build reussi.
-La validation navigateur reelle du dashboard 4B reste a effectuer.
+La validation navigateur reelle du dashboard 4B et la synchronisation mois/annee sont confirmees par l'utilisateur.
 Aucun fichier backend, migration ou MySQL modifie pendant cette phase.
-Aucun commit ni push ; aucune phase 4C commencee.
+La phase 4B est terminee ; les interfaces transactions/categories sont decrites ci-dessous.
+
+## Frontend — Phase 4C Transactions et categories
+
+Le frontend permet maintenant de saisir revenus et depenses sans Postman.
+Les routes privees /categories et /transactions sont protegees par AuthGuard et
+integrees au layout. Les services utilisent l'URL API centralisee et le JWT ajoute
+par l'interceptor existant. Le backend reste responsable de l'isolation utilisateur.
+
+Categories : listes revenus/depenses, creation, modification nom/type et suppression
+avec confirmation inline. Nom requis, limite de 100 caracteres, messages clairs pour
+les doublons et categories utilisees (409), les 404 et les erreurs generales.
+Le renommage reste possible selon les regles backend.
+
+Transactions : liste dans l'ordre backend, filtres combinables type/categorie et
+reinitialisation. Creation et modification via Reactive Forms : type visuel pour
+filtrer les categories, categorie requise, montant positif avec au plus 4 decimales,
+date non future, description optionnelle (255 caracteres maximum). Aucun type ni
+userId envoye : le backend derive le type depuis Category. Une categorie manquante
+propose un lien vers sa creation. La suppression exige une confirmation explicite.
+Les montants utilisent le pipe commun avec suffixe neutre « unités » ; +/− restent
+uniquement visuels. Un succes ferme le formulaire et actualise la liste avec feedback.
+
+Pages responsive avec cartes lisibles sur mobile, labels, focus visible, messages
+accessibles, chargements, actions desactivees pendant mutations, erreurs/retry et
+etats vides. Budgets et objectifs restent a venir. Aucune dependance ajoutee.
+
+Validation : npm test -- --watch=false : 88 tests reussis ; npm run build reussi.
+La validation navigateur reelle de 4C reste a effectuer. Aucun fichier backend,
+migration, MySQL ou CORS modifie. Aucun commit ni push ; aucune phase 4D commencee.
