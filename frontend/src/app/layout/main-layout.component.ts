@@ -11,7 +11,8 @@ import { AuthService } from '../core/auth.service';
         <a class="brand" routerLink="/dashboard">Smart Personal<br>Finance Wallet</a>
         <nav aria-label="Navigation principale">
           <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Tableau de bord</a>
-          <span class="nav-pending">Transactions <small>À venir</small></span>
+          <a routerLink="/transactions" routerLinkActive="active" ariaCurrentWhenActive="page">Transactions</a>
+          <a routerLink="/categories" routerLinkActive="active" ariaCurrentWhenActive="page">Catégories</a>
           <span class="nav-pending">Budgets <small>À venir</small></span>
           <span class="nav-pending">Objectifs d'épargne <small>À venir</small></span>
         </nav>

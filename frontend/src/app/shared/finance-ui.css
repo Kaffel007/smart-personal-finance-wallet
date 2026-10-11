@@ -1,0 +1,34 @@
+:host { display: block; }
+.page-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.page-heading h1 { margin: .5rem 0; }
+.panel { padding: 1.5rem; background: white; border: 1px solid #dfe7eb; border-radius: 1rem; margin-bottom: 1.5rem; }
+.panel h2 { font-size: 1.2rem; }
+.form-grid, .category-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.form-grid label { margin-top: .5rem; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; width: 100%; }
+.wide { grid-column: 1 / -1; }
+select, textarea { font: inherit; color: #182c38; background: white; border: 1px solid #b9c9d0; border-radius: .5rem; padding: .7rem .8rem; width: 100%; min-height: 46px; }
+textarea { resize: vertical; }
+.actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1rem; }
+.secondary, .danger { border: 1px solid #b9c9d0; background: white; color: #182c38; border-radius: .5rem; padding: .7rem 1rem; font-weight: 600; }
+.danger { color: #9d2929; border-color: #d69b9b; }
+.feedback { color: #116b61; background: #e8f4f0; padding: .8rem 1rem; border-radius: .5rem; }
+.confirmation { border-color: #d69b9b; }
+.list { list-style: none; padding: 0; margin: 0; }
+.list > li { border-bottom: 1px solid #edf1f3; padding: 1rem 0; overflow-wrap: anywhere; }
+.list > li:last-child { border-bottom: 0; }
+.item-heading { display: flex; justify-content: space-between; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.badge { font-size: .8rem; font-weight: 650; padding: .3rem .6rem; border-radius: .35rem; background: #e8f4f0; color: #116b61; }
+.expense { color: #9d2929; background: #fff0ef; }
+.filters { display: flex; align-items: end; flex-wrap: wrap; gap: 1rem; }
+.filters > div { flex: 1; min-width: 180px; }
+.filters label { margin-top: 0; }
+.filters button { min-height: 46px; }
+.field-help { font-size: .8rem; margin: .4rem 0; }
+.transaction-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+dt { font-size: .8rem; color: #556775; }
+dd { margin: .3rem 0; overflow-wrap: anywhere; }
+.transaction-amount { font-weight: 750; color: #116b61; overflow-wrap: anywhere; }
+.transaction-amount.expense { background: none; color: #9d2929; }
+@media (max-width: 1000px) { .category-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .form-grid, .transaction-details { grid-template-columns: 1fr; } .panel { padding: 1rem; } .wide { grid-column: auto; } }

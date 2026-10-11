@@ -1,0 +1,51 @@
+<div class="page-heading">
+  <div><p class="eyebrow">VOS RÉFÉRENTIELS</p><h1>Catégories</h1><p class="muted">Organisez vos revenus et dépenses.</p></div>
+  <button class="primary" type="button" (click)="openCreate()" [disabled]="busy()">Nouvelle catégorie</button>
+</div>
+@if (feedback()) { <p class="feedback" role="status">{{ feedback() }}</p> }
+@if (showForm()) {
+  <section class="panel" aria-labelledby="category-form-title">
+    <h2 id="category-form-title">{{ editing() ? 'Modifier la catégorie' : 'Créer une catégorie' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="saving()">
+      <fieldset [disabled]="busy()" class="form-grid">
+        <div><label for="category-name">Nom</label>
+          <input id="category-name" formControlName="name" maxlength="100" aria-describedby="category-name-help" [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid">
+          <p id="category-name-help" class="field-help" [class.field-error]="form.controls.name.touched && form.controls.name.invalid">Nom requis, 100 caractères maximum.</p>
+        </div>
+        <div><label for="category-type">Type</label>
+          <select id="category-type" formControlName="type" aria-describedby="category-type-help"><option value="INCOME">Revenu</option><option value="EXPENSE">Dépense</option></select>
+          <p id="category-type-help" class="field-help">Le type d'une catégorie utilisée ne peut pas être changé.</p>
+        </div>
+      </fieldset>
+      @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+      <div class="actions"><button class="primary" type="submit" [disabled]="busy()">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button><button class="secondary" type="button" (click)="cancelForm()" [disabled]="busy()">Annuler</button></div>
+    </form>
+  </section>
+}
+@if (pendingDelete(); as category) {
+  <section class="panel confirmation" aria-labelledby="category-delete-title">
+    <h2 id="category-delete-title">Supprimer la catégorie {{ category.name }} ?</h2>
+    <p>Cette action est définitive.</p>
+    @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+    <div class="actions"><button class="danger" type="button" (click)="confirmDelete()" [disabled]="busy()">{{ deleting() ? 'Suppression…' : 'Confirmer la suppression' }}</button><button class="secondary" type="button" (click)="cancelDelete()" [disabled]="busy()">Annuler</button></div>
+  </section>
+}
+@if (loading()) { <p role="status">Chargement des catégories…</p> }
+@else if (listError()) { <p class="error-banner" role="alert">{{ listError() }}</p><button class="secondary" type="button" (click)="load()">Réessayer</button> }
+@else if (categories().length === 0) { <div class="panel"><p>Aucune catégorie créée.</p><button class="primary" type="button" (click)="openCreate()" [disabled]="busy()">Créer une catégorie</button></div> }
+@else {
+  <div class="category-grid">
+    @for (section of sections; track section.type) {
+      <section class="panel" [attr.aria-label]="section.label">
+        <h2>{{ section.label }}</h2>
+        <ul class="list">
+          @for (category of categoriesOfType(section.type); track category.id) {
+            <li><div class="item-heading"><strong>{{ category.name }}</strong><span class="badge" [class.expense]="category.type === 'EXPENSE'">{{ category.type === 'INCOME' ? 'Revenu' : 'Dépense' }}</span></div>
+              <div class="actions"><button class="secondary" type="button" (click)="openEdit(category)" [disabled]="busy()" [attr.aria-label]="'Modifier la catégorie ' + category.name">Modifier</button><button class="danger" type="button" (click)="askDelete(category)" [disabled]="busy()" [attr.aria-label]="'Supprimer la catégorie ' + category.name">Supprimer</button></div>
+            </li>
+          } @empty { <li class="muted">Aucune catégorie de ce type.</li> }
+        </ul>
+      </section>
+    }
+  </div>
+}

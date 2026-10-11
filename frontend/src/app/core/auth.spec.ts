@@ -117,6 +117,11 @@ describe('Private routes and forms', () => {
     await harness.navigateByUrl('/dashboard', LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login');
   });
+  it.each(['/transactions', '/categories'])('protects the private route %s', async path => {
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl(path, LoginComponent);
+    expect(TestBed.inject(Router).url).toBe('/login');
+  });
   it('redirects the root and unknown URLs coherently', async () => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/', LoginComponent);

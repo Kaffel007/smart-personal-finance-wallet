@@ -24,7 +24,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 - Une réponse protégée HTTP 401 efface la session et redirige vers login.
 - Guard de navigation et récupération du profil après rafraîchissement.
 - Déconnexion : suppression du token et du profil, redirection vers login.
-- Transactions, budgets et objectifs affichés comme rubriques à venir sans routes cassées.
+- Transactions et catégories accessibles depuis le layout ; budgets et objectifs encore à venir.
 
 L'inscription applique les limites backend : noms requis (100 caractères maximum),
 e-mail valide (254 caractères maximum), mot de passe non vide de 12 caractères
@@ -42,21 +42,24 @@ npm run build
 npm test -- --watch=false
 ```
 
-Build de production réussi et 29 tests réussis (Vitest, HttpTestingController et
-RouterTestingHarness), dont 13 tests dashboard ajoutés en 4B. Les tests HTTP sont
+Build de production réussi et 88 tests réussis (Vitest, HttpTestingController et
+RouterTestingHarness), dont 59 tests ajoutés en 4C. Les tests HTTP sont
 simulés et ne dépendent d'aucun backend réel ni de MySQL.
 
 La phase 4A et CORS ont été validés dans le navigateur par l'utilisateur.
 Le backend attendu écoute sur localhost:8080 avec le profil Spring `dev`,
 qui autorise uniquement http://localhost:4200. Aucun proxy frontend n'est configuré.
-La validation navigateur réelle du dashboard 4B reste à effectuer.
-Aucun fichier backend n'a été modifié pendant la phase 4B.
+La phase 4B et la synchronisation mois/année sont validées dans le navigateur, selon la confirmation de l'utilisateur. La validation navigateur de 4C reste à effectuer.
+Aucun fichier backend n'a été modifié pendant les phases frontend 4B et 4C.
 
 ## Structure
 
 - `src/app/core/` : configuration API, modèles auth, service, interceptor, guards, validations et tests.
 - `src/app/features/auth/` : formulaires réactifs login et register.
 - `src/app/features/dashboard/` : modèle, service HTTP, dashboard, formatage des montants et tests.
+- `src/app/features/categories/` : modèles, service CRUD, page, messages métier et tests.
+- `src/app/features/transactions/` : modèles, service CRUD/filtres, page, validations et tests.
+- `src/app/shared/finance-ui.css` : styles communs aux deux pages.
 - `src/app/layout/` : layout connecté et chargement du profil.
 - `src/app/app.routes.ts` : routes lazy-loaded publiques et privées.
 - `src/styles.css` : styles communs et responsive desktop/mobile.
@@ -98,5 +101,53 @@ Les tests vérifient le contrat HTTP, la période initiale, tous les indicateurs
 les changements de période, l'absence de doublons, l'annulation des requêtes
 obsolètes, l'erreur/retry, l'état vide, les dépassements et les trois états du solde.
 
-4B est implémentée et testée avec Angular ; validation navigateur réelle à faire.
-Les interfaces CRUD métier et la phase 4C ne sont pas commencées.
+4B est terminée, testée avec Angular et validée dans le navigateur par l'utilisateur.
+
+## Phase 4C — Transactions et catégories
+
+Les routes privées `/transactions` et `/categories` sont protégées par AuthGuard
+et disponibles dans le MainLayout. Budgets et objectifs restent marqués À venir.
+
+`CategoryService` utilise `/api/categories` : getAll(type?), getOne(id), create,
+update et delete. Les DTO contiennent uniquement name/type ; la réponse ajoute id.
+La page sépare revenus et dépenses et propose un formulaire réactif inline, avec
+nom obligatoire et limite de 100 caractères. Création, modification du nom/type
+et suppression sont possibles. Une confirmation inline est obligatoire avant DELETE.
+Les conflits 409 sont traduits en messages locaux : doublon ou catégorie utilisée.
+Le renommage reste disponible ; le backend arbitre le changement de type et la
+suppression d'une catégorie utilisée. Les 404 et autres erreurs ne révèlent aucun
+détail technique.
+
+`TransactionService` utilise `/api/transactions` : getAll(filters?), getOne(id),
+create, update et delete. Les filtres type/categoryId sont transmis par HttpParams,
+combinables et réinitialisables. La liste conserve l'ordre reçu du backend.
+La réponse reprend exactement id, amount, type, transactionDate, description,
+categoryId et categoryName. Les payloads create/update contiennent seulement
+categoryId, amount, transactionDate et description : aucun userId ni type.
+
+Le type visuel du formulaire sélectionne les catégories disponibles, puis le
+backend dérive le type réel depuis la catégorie. Changer le type vide la sélection
+précédente. Si aucune catégorie n'existe, un lien conduit vers `/categories`.
+Le montant est positif, limité à 15 chiffres entiers et 4 décimales ; la date est
+requise, non future et initialisée à la date locale du navigateur. La description
+est optionnelle, limitée à 255 caractères et affichée par un tiret si absente.
+Le préremplissage, la modification et la suppression avec confirmation sont pris
+en charge. Les signes +/− sont uniquement visuels ; les montants métier restent
+positifs. FinancialAmountPipe conserve le format français et le suffixe « unités ».
+
+Après mutation, la liste est rechargée et un message de succès est annoncé sans
+redirection vers le dashboard. Pendant une mutation, les actions sont désactivées
+et les doubles soumissions évitées. Chargement, erreurs avec retry et états vides
+sont distincts. Les filtres annulent les requêtes devenues obsolètes.
+Les pages utilisent des cards responsive, labels, focus visible, aides associées
+aux champs et feedback accessible. Aucun window.confirm ni bibliothèque UI.
+
+Le JWT reste ajouté par l'interceptor existant ; les 401 restent gérés globalement.
+Le backend conserve toute la responsabilité de l'autorisation et de l'isolation
+par utilisateur. Aucun fichier backend, migration ou donnée MySQL modifié.
+
+Validation : 88 tests et build de production réussis. Les tests sont entièrement
+simulés et vérifient contrats HTTP, CRUD, filtres, validations, confirmations,
+conflits, erreurs, feedback et protection des routes.
+4C est implémentée/testée Angular ; validation navigateur réelle restante.
+4D Budgets UI et 4E Savings Goals UI ne sont pas commencées.
