@@ -104,7 +104,7 @@ Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilis
 
 ## 5. Administration — En cours
 
-### 5A Backend Admin MVP — Implemente et teste automatiquement
+### 5A Backend Admin MVP — Termine et valide MySQL
 
 - GET /api/admin/users : liste par id decroissant et recherche optionnelle nom complet/e-mail.
 - GET /api/admin/users/{id} : informations de compte uniquement ; 404 si absent.
@@ -120,15 +120,30 @@ Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilis
 - Validation H2 : 246 tests backend reussis dont 41 nouveaux, aucun echec ni test ignore.
 - mvnw.cmd test, package -DskipTests apres tests et git diff --check reussis.
 - Aucun changement AppUser, schema, migration, frontend, CORS ou dependance ; aucun test manuel MySQL.
-- Aucun commit ni push pour 5A ; aucune suppression de compte ni modification de role.
+- Validation MySQL reelle confirmee par l'utilisateur : login ADMIN, stats/liste, blocage et rejet JWT/login USER, deblocage et reconnexion, USER refuse en 403.
+- Documentation, commit et push confirmes par l'utilisateur ; aucune suppression de compte ni modification de role.
 
-### 5B Frontend Admin — Non commence
+### 5B Frontend Admin — Implemente et teste Angular
 
-Interface de gestion des comptes et statistiques a developper apres validation explicite de 5A.
+- Route /admin protegee par authGuard et adminGuard, profil charge depuis /api/auth/me si absent.
+- Login existant : destination USER /dashboard ou ADMIN /admin selon /me ; aucun decodage JWT.
+- MainLayout reutilise : navigation USER conservee, navigation ADMIN et indicateur Espace administrateur.
+- Modeles AdminUser/AdminStats et AdminService conformes aux endpoints backend ; JWT via interceptor.
+- Statistiques de comptes exclusivement backend, liste identite/e-mail/role/statut/date francaise.
+- Recherche sur soumission, reset, requetes obsoletes annulees et etats vides.
+- Blocage USER confirme, deblocage direct, refresh liste et stats, feedback et blocage des doubles clics.
+- Aucune action sur ADMIN ou compte connecte ; aucun changement de role ni suppression.
+- Chargements independants, erreurs locales et retry, gestion 403/404/409 sans JSON technique.
+- Confidentialite : aucune finance privee, aucun mot de passe/hash/JWT affiche.
+- Responsive, labels, boutons nommes, focus visible, status/alert et navigation clavier.
+- Validation : 222 tests Angular reussis (41 nouveaux), build production et git diff --check reussis.
+- Validation navigateur reelle de 5B restante.
+- Backend, migrations, MySQL, CORS et dependances inchanges.
+- Aucun commit ni push pour 5B ; Machine Learning non commence.
 
 ## Machine Learning — Non commence
 
-Prevu apres l'administration ; aucune implementation ML pendant 5A.
+Prevu apres l'administration ; aucune implementation ML pendant 5A ou 5B.
 
 ## Phases futures — Planifiees
 
@@ -144,5 +159,5 @@ Prevu apres l'administration ; aucune implementation ML pendant 5A.
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 5A s'arrete ici, implementee et testee automatiquement sur H2.
-Aucun commit ni push pour 5A ; 5B et Machine Learning non commences.
+La phase 5B s'arrete ici, implementee et testee Angular ; validation navigateur reelle restante.
+Aucun commit ni push pour 5B ; Machine Learning non commence.

@@ -83,8 +83,8 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 4D Budgets UI | Terminee et validee navigateur |
 | 4E Savings Goals UI | Terminee (MVP utilisateur confirme par l'utilisateur) |
 | 5. Administration | En cours |
-| 5A Backend Admin MVP | Implemente/teste automatiquement sur H2 |
-| 5B Frontend Admin | Non commence |
+| 5A Backend Admin MVP | Termine et valide MySQL |
+| 5B Frontend Admin | Implemente/teste Angular ; validation navigateur restante |
 | Machine Learning | Non commence ; prevu apres administration |
 | Notifications et export | Planifies |
 
@@ -92,7 +92,7 @@ La feuille de route detaillee est disponible dans [documentation/roadmap.md](doc
 
 ## Etat actuel
 
-Le MVP utilisateur (backend et frontend des phases 1 a 4E) est confirme termine par l'utilisateur. La phase 5A Backend Admin est implementee et testee automatiquement sur H2 ; le frontend Admin et le ML ne sont pas commences. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
+Le MVP utilisateur (backend et frontend des phases 1 a 4E) est confirme termine par l'utilisateur. La phase 5A Backend Admin est terminee et validee MySQL selon sa confirmation ; 5B Frontend Admin est implementee et testee Angular, avec validation navigateur restante. Le ML n'est pas commence. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
@@ -338,4 +338,41 @@ tests d'integration Admin, sans echec ni test ignore. `./mvnw.cmd package -Dskip
 reussi apres cette suite ; JAR executable dans `backend/target/`.
 Les tests automatiques utilisent H2 avec Flyway ; aucun test manuel MySQL lance.
 `git diff --check` reussi, frontend et dependances inchanges, aucun secret ajoute.
-Aucun commit ni push pour 5A. 5B Frontend Admin et Machine Learning non commences.
+La validation MySQL reelle de 5A est confirmee par l'utilisateur : login ADMIN,
+stats, liste, blocage/deblocage USER, rejet du JWT existant et du login pendant
+le blocage, reconnexion apres deblocage, et refus USER en 403. Documentation,
+commit et push de 5A sont egalement confirmes.
+
+## Frontend — Phase 5B Admin MVP
+
+La page Login existante charge `/api/auth/me` apres connexion puis dirige USER
+vers `/dashboard` et ADMIN vers `/admin`, selon le role du profil, sans decoder
+le JWT. La route `/admin` utilise authGuard et adminGuard : anonyme vers login,
+USER vers dashboard, ADMIN autorise. Au rafraichissement, le guard recupere le
+profil si absent ; MainLayout reutilise ensuite le profil deja charge.
+
+MainLayout adapte sa navigation : les cinq liens personnels restent disponibles
+pour USER ; ADMIN voit Administration et Deconnexion, avec « Espace administrateur ».
+La page affiche quatre compteurs issus de GET /api/admin/stats, puis les comptes
+(identite, e-mail, role, statut et date de creation au format francais).
+Actif, Bloque et Desactive sont distingues, y compris un compte bloque et desactive.
+
+AdminService utilise les endpoints Admin existants : statistiques, liste/recherche,
+detail, block et unblock. La recherche nom/e-mail part sur soumission du formulaire,
+avec reinitialisation et annulation des requetes obsoletes. La liste expose deja
+toutes les informations de compte utiles ; aucune page de detail supplementaire.
+Le blocage USER exige une confirmation ; le deblocage est direct. Apres succes,
+liste et statistiques sont rechargees avec feedback. Aucun bouton d'action pour
+ADMIN ou le compte connecte. Aucun changement de role ni suppression de compte.
+
+Chargements statistiques/liste/recherche separes, mutations protegees contre les
+doubles clics, erreurs locales et retry. HTTP 403/404/409 ont des messages locaux,
+et 401 reste gere par l'interceptor. Aucun en-tete Authorization manuel.
+Cards responsive, labels, focus visible et messages status/alert ; aucune librairie UI.
+La page Admin n'affiche ni finances privees, ni mot de passe/hash, ni JWT.
+Le backend reste responsable des autorisations et de la confidentialite.
+
+Validation : 222 tests Angular reussis (41 nouveaux), npm run build et
+git diff --check reussis. Aucun backend, migration, MySQL, CORS ou dependance modifie.
+Validation navigateur reelle de 5B restante. Aucun commit ni push pour 5B ;
+Machine Learning non commence.
