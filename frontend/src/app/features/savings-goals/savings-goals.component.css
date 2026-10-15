@@ -1,0 +1,10 @@
+.goal-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; list-style: none; margin: 0; padding: 0; }
+.goal-card { margin-bottom: 0; min-width: 0; overflow-wrap: anywhere; }
+.goal-card h2 { margin-top: 0; }
+.goal-details { display: grid; gap: .8rem; }
+.goal-progress { height: .65rem; background: #edf1f3; border-radius: 1rem; overflow: hidden; }
+.goal-progress span { display: block; height: 100%; background: #116b61; }
+.achieved { border-color: #116b61; }
+.achievement, .surplus { color: #116b61; font-weight: 650; }
+@media (max-width: 1100px) { .goal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) { .goal-grid { grid-template-columns: 1fr; } }

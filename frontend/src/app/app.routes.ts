@@ -9,6 +9,7 @@ export const routes: Routes = [
     { path: 'transactions', canActivate: [authGuard], loadComponent: () => import('./features/transactions/transactions.component').then(m => m.TransactionsComponent) },
     { path: 'categories', canActivate: [authGuard], loadComponent: () => import('./features/categories/categories.component').then(m => m.CategoriesComponent) },
     { path: 'budgets', canActivate: [authGuard], loadComponent: () => import('./features/budgets/budgets.component').then(m => m.BudgetsComponent) },
+    { path: 'savings-goals', canActivate: [authGuard], loadComponent: () => import('./features/savings-goals/savings-goals.component').then(m => m.SavingsGoalsComponent) },
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   ] },
   { path: '**', redirectTo: '' },

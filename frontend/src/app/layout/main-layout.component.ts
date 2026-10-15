@@ -14,7 +14,7 @@ import { AuthService } from '../core/auth.service';
           <a routerLink="/transactions" routerLinkActive="active" ariaCurrentWhenActive="page">Transactions</a>
           <a routerLink="/categories" routerLinkActive="active" ariaCurrentWhenActive="page">Catégories</a>
           <a routerLink="/budgets" routerLinkActive="active" ariaCurrentWhenActive="page">Budgets</a>
-          <span class="nav-pending">Objectifs d'épargne <small>À venir</small></span>
+          <a routerLink="/savings-goals" routerLinkActive="active" ariaCurrentWhenActive="page">Objectifs d'épargne</a>
         </nav>
         <button class="logout" type="button" (click)="auth.logout()">Déconnexion</button>
       </aside>

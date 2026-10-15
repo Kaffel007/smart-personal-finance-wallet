@@ -117,7 +117,7 @@ describe('Private routes and forms', () => {
     await harness.navigateByUrl('/dashboard', LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login');
   });
-  it.each(['/transactions', '/categories', '/budgets'])('protects the private route %s', async path => {
+  it.each(['/transactions', '/categories', '/budgets', '/savings-goals'])('protects the private route %s', async path => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(path, LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login');
@@ -137,7 +137,7 @@ describe('Private routes and forms', () => {
     expect(harness.routeNativeElement?.textContent).toContain('Bienvenue Test');
     expect(harness.routeNativeElement?.textContent).toContain('Tableau de bord');
   });
-  it('navigates from the layout to budgets with Bearer while savings remains pending', async () => {
+  it('navigates from the layout to budgets with Bearer', async () => {
     localStorage.setItem(TOKEN_STORAGE_KEY, testToken);
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl('/dashboard');
@@ -147,8 +147,6 @@ describe('Private routes and forms', () => {
     const link = harness.routeNativeElement?.querySelector('a[href="/budgets"]') as HTMLAnchorElement;
     expect(link.textContent?.trim()).toBe('Budgets');
     expect(link.querySelector('small')).toBeNull();
-    expect(harness.routeNativeElement?.querySelector('.nav-pending')?.textContent).toContain("Objectifs d'épargne");
-    expect(harness.routeNativeElement?.querySelector('.nav-pending small')?.textContent).toBe('À venir');
     link.click();
     await harness.fixture.whenStable();
     const budgets = http.expectOne(req => req.url === `${API_BASE_URL}/budgets`);
@@ -159,6 +157,27 @@ describe('Private routes and forms', () => {
     expect(TestBed.inject(Router).url).toBe('/budgets');
     expect(link.getAttribute('aria-current')).toBe('page');
     expect(harness.routeNativeElement?.textContent).toContain('Planifiez vos dépenses');
+  });
+  it('navigates to savings goals with an active link and no pending badge', async () => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, testToken);
+    const harness = await RouterTestingHarness.create();
+    await harness.navigateByUrl('/dashboard');
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne(`${API_BASE_URL}/auth/me`).flush(user);
+    harness.detectChanges();
+    const link = harness.routeNativeElement?.querySelector('a[href="/savings-goals"]') as HTMLAnchorElement;
+    expect(link.textContent?.trim()).toBe("Objectifs d'épargne");
+    expect(link.querySelector('small')).toBeNull();
+    expect(harness.routeNativeElement?.querySelector('.nav-pending')).toBeNull();
+    link.click();
+    await harness.fixture.whenStable();
+    const request = http.expectOne(`${API_BASE_URL}/savings-goals`);
+    expect(request.request.headers.get('Authorization')).toBe(`Bearer ${testToken}`);
+    request.flush([]);
+    harness.detectChanges();
+    expect(TestBed.inject(Router).url).toBe('/savings-goals');
+    expect(link.getAttribute('aria-current')).toBe('page');
+    expect(harness.routeNativeElement?.textContent).toContain('Définissez vos projets');
   });
   it('blocks invalid login submissions', async () => {
     const harness = await RouterTestingHarness.create();

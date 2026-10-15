@@ -24,7 +24,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 - Une réponse protégée HTTP 401 efface la session et redirige vers login.
 - Guard de navigation et récupération du profil après rafraîchissement.
 - Déconnexion : suppression du token et du profil, redirection vers login.
-- Transactions, catégories et budgets accessibles depuis le layout ; objectifs encore à venir.
+- Transactions, catégories, budgets et objectifs d'épargne accessibles depuis le layout.
 
 L'inscription applique les limites backend : noms requis (100 caractères maximum),
 e-mail valide (254 caractères maximum), mot de passe non vide de 12 caractères
@@ -42,15 +42,15 @@ npm run build
 npm test -- --watch=false
 ```
 
-Build de production réussi et 134 tests réussis (Vitest, HttpTestingController et
-RouterTestingHarness), dont 59 tests ajoutés en 4C et 46 en 4D. Les tests HTTP sont
+Build de production réussi et 181 tests réussis (Vitest, HttpTestingController et
+RouterTestingHarness), dont 59 tests ajoutés en 4C, 46 en 4D et 47 en 4E. Les tests HTTP sont
 simulés et ne dépendent d'aucun backend réel ni de MySQL.
 
 La phase 4A et CORS ont été validés dans le navigateur par l'utilisateur.
 Le backend attendu écoute sur localhost:8080 avec le profil Spring `dev`,
 qui autorise uniquement http://localhost:4200. Aucun proxy frontend n'est configuré.
-Les phases 4B (dont la synchronisation mois/année) et 4C sont validées dans le navigateur, selon la confirmation de l'utilisateur. La validation navigateur de 4D reste à effectuer.
-Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C et 4D.
+Les phases 4B (dont la synchronisation mois/année), 4C et 4D sont validées dans le navigateur, selon la confirmation de l'utilisateur. La validation navigateur de 4E reste à effectuer.
+Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C, 4D et 4E.
 
 ## Structure
 
@@ -60,6 +60,7 @@ Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C et 4
 - `src/app/features/categories/` : modèles, service CRUD, page, messages métier et tests.
 - `src/app/features/transactions/` : modèles, service CRUD/filtres, page, validations et tests.
 - `src/app/features/budgets/` : modèles, service CRUD/filtres, page, styles et tests.
+- `src/app/features/savings-goals/` : modèles, service CRUD, validations, page, styles et tests.
 - `src/app/shared/finance-ui.css` : styles communs aux pages de gestion.
 - `src/app/layout/` : layout connecté et chargement du profil.
 - `src/app/app.routes.ts` : routes lazy-loaded publiques et privées.
@@ -107,7 +108,7 @@ obsolètes, l'erreur/retry, l'état vide, les dépassements et les trois états 
 ## Phase 4C — Transactions et catégories
 
 Les routes privées `/transactions` et `/categories` sont protégées par AuthGuard
-et disponibles dans le MainLayout. Budgets disponibles depuis 4D ; objectifs marqués À venir.
+et disponibles dans le MainLayout. Budgets disponibles depuis 4D ; objectifs disponibles depuis 4E.
 
 `CategoryService` utilise `/api/categories` : getAll(type?), getOne(id), create,
 update et delete. Les DTO contiennent uniquement name/type ; la réponse ajoute id.
@@ -155,7 +156,7 @@ conflits, erreurs, feedback et protection des routes.
 ## Phase 4D — Budgets UI
 
 `/budgets` est une route privée lazy-loaded protégée par AuthGuard et disponible
-dans MainLayout. Les objectifs d'épargne restent À venir.
+dans MainLayout. Les objectifs d'épargne sont disponibles depuis 4E.
 
 `BudgetService` utilise `/api/budgets` : getAll(filters?), getOne(id), create,
 update et delete. HttpParams transmet year/month/categoryId seuls ou combinés.
@@ -195,5 +196,53 @@ La logique Dashboard reste inchangée et reflète les mutations au prochain char
 Validation : 9 tests service, 35 tests composant et 2 tests route/layout ajoutés ;
 134 tests au total réussis, npm run build et git diff --check réussis.
 Aucune dépendance ajoutée ni modification backend, migration, MySQL ou CORS.
-4D est implémentée/testée Angular ; validation navigateur réelle restante.
-Aucun commit ni push pour 4D ; 4E Savings Goals UI non commencée.
+4D est terminée et validée dans le navigateur ; documentation, commit et push
+confirmés par l'utilisateur.
+
+## Phase 4E — Objectifs d'épargne UI
+
+`/savings-goals` est une route privée lazy-loaded protégée par AuthGuard et
+accessible dans MainLayout, avec lien actif et sans badge À venir.
+
+`SavingsGoalService` utilise `/api/savings-goals` : getAll(), getOne(id), create,
+update et delete. Les interfaces SavingsGoal, CreateSavingsGoalRequest et
+UpdateSavingsGoalRequest reproduisent les DTO backend inspectés. Les réponses
+contiennent id/name/targetAmount/savedAmount/remainingAmount/progressPercent/targetDate.
+La date est nullable ; savedAmount peut être absent ou null en création, mais
+est obligatoire en modification. Le service ne transmet que les champs écrits
+name/targetAmount/savedAmount/targetDate, même si l'objet reçu contient des champs
+calculés ou internes. JWT et HTTP 401 restent gérés par l'interceptor.
+
+Le formulaire réactif inline valide le nom non blanc (120 caractères maximum),
+la cible positive et l'épargne positive ou nulle, avec quatre décimales maximum
+et un montant inférieur à 10¹⁵. Le validateur de montant existant est réutilisé.
+L'épargne initiale est zéro ; vide en création devient zéro dans le payload,
+vide en modification est invalide. La date cible utilise un input date facultatif,
+avec validation calendaire, sans imposer de date future.
+La modification préremplit tous les champs et permet d'effacer la date cible.
+
+Après POST/PUT réussi, formulaire fermé/réinitialisé, GET de la liste et feedback
+« Objectif créé. » ou « Objectif mis à jour. ». DELETE exige une confirmation
+inline ; après 204, un GET recharge la liste et « Objectif supprimé. » est annoncé.
+Les mutations bloquent les doubles soumissions. Les erreurs liste/enregistrement/
+suppression et 400/404 restent locales sans exposer les détails techniques ; un
+bouton Réessayer recharge la liste. L'état vide propose « Créer un objectif ».
+
+Les cards conservent l'ordre backend et affichent nom, cible, épargné, restant,
+progression et date dd/MM/yyyy ou « Aucune date cible ». FinancialAmountPipe garde
+le suffixe « unités ». Aucun calcul métier du restant ou du pourcentage côté UI.
+Barre CSS et aria-valuenow bornés à 0..100 ; texte et aria-valuetext gardent la
+valeur réelle. Dès 100 %, « Objectif atteint » et style de réussite ; au-delà,
+pourcentage réel et restant négatif restent visibles.
+
+Styles communs finance-ui.css réutilisés, grille desktop trois colonnes,
+tablette deux et mobile une ; formulaire responsive, labels, aides de validation,
+focus visible, messages status/alert et progression ARIA. La logique Dashboard
+reste inchangée : les nouveaux totaux seront visibles à son prochain chargement.
+
+Validation : 7 tests service, 38 tests composant et 2 tests route/layout ajoutés,
+soit 181 tests réussis au total ; npm run build et git diff --check réussis.
+Les tests HTTP sont simulés ; validation navigateur réelle de 4E restante.
+Aucune dépendance ajoutée, aucun backend, migration, MySQL ou CORS modifié.
+Pas de SavingsContribution, de liaison automatique aux transactions, d'Admin,
+de ML, de notifications ou de graphiques avancés. Aucun commit ni push pour 4E.

@@ -1,0 +1,45 @@
+<div class="page-heading">
+  <div><p class="eyebrow">VOS PROJETS</p><h1>Objectifs d'épargne</h1><p class="muted">Définissez vos projets et suivez votre progression.</p></div>
+  <button class="primary" type="button" (click)="openCreate()" [disabled]="busy()">Nouvel objectif</button>
+</div>
+@if (feedback()) { <p class="feedback" role="status">{{ feedback() }}</p> }
+@if (showForm()) {
+  <section class="panel" aria-labelledby="goal-form-title">
+    <h2 id="goal-form-title">{{ editing() ? "Modifier l'objectif" : 'Nouvel objectif' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="saving()">
+      <fieldset class="form-grid" [disabled]="busy()">
+        <div><label for="goal-name">Nom</label><input id="goal-name" type="text" maxlength="120" formControlName="name" aria-describedby="goal-name-help" [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid"><p id="goal-name-help" class="field-help" [class.field-error]="form.controls.name.touched && form.controls.name.invalid">Nom requis, 120 caractères maximum.</p></div>
+        <div><label for="goal-target">Montant cible</label><input id="goal-target" type="number" min="0.0001" step="0.0001" formControlName="targetAmount" aria-describedby="goal-target-help" [attr.aria-invalid]="form.controls.targetAmount.touched && form.controls.targetAmount.invalid"><p id="goal-target-help" class="field-help" [class.field-error]="form.controls.targetAmount.touched && form.controls.targetAmount.invalid">Montant requis, strictement positif, inférieur à 10¹⁵ et au plus 4 décimales.</p></div>
+        <div><label for="goal-saved">Montant déjà épargné</label><input id="goal-saved" type="number" min="0" step="0.0001" formControlName="savedAmount" aria-describedby="goal-saved-help" [attr.aria-invalid]="form.controls.savedAmount.touched && form.controls.savedAmount.invalid"><p id="goal-saved-help" class="field-help" [class.field-error]="form.controls.savedAmount.touched && form.controls.savedAmount.invalid">Montant positif ou nul, inférieur à 10¹⁵, au plus 4 décimales. {{ editing() ? 'Requis en modification.' : 'Facultatif en création : zéro si vide.' }}</p></div>
+        <div><label for="goal-date">Date cible (facultative)</label><input id="goal-date" type="date" formControlName="targetDate" aria-describedby="goal-date-help" [attr.aria-invalid]="form.controls.targetDate.touched && form.controls.targetDate.invalid"><p id="goal-date-help" class="field-help" [class.field-error]="form.controls.targetDate.touched && form.controls.targetDate.invalid">Choisissez une date valide ou laissez ce champ vide.</p></div>
+      </fieldset>
+      @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+      <div class="actions"><button class="primary" type="submit" [disabled]="busy()">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button><button class="secondary" type="button" (click)="cancelForm()" [disabled]="busy()">Annuler</button></div>
+    </form>
+  </section>
+}
+@if (pendingDelete(); as goal) {
+  <section class="panel confirmation" aria-labelledby="goal-delete-title" [attr.aria-busy]="deleting()">
+    <h2 id="goal-delete-title">Supprimer cet objectif ?</h2><p>{{ goal.name }} · {{ goal.targetAmount | financialAmount }}</p><p>Cette action est définitive.</p>
+    @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+    <div class="actions"><button class="danger" type="button" (click)="confirmDelete()" [disabled]="busy()">{{ deleting() ? 'Suppression…' : 'Confirmer la suppression' }}</button><button class="secondary" type="button" (click)="cancelDelete()" [disabled]="busy()">Annuler</button></div>
+  </section>
+}
+@if (loading()) { <p role="status">Chargement des objectifs d'épargne…</p> }
+@else if (listError()) { <p class="error-banner" role="alert">{{ listError() }}</p><button class="secondary" type="button" (click)="load()">Réessayer les objectifs</button> }
+@else if (goals().length === 0) {
+  <div class="panel"><p>Aucun objectif d'épargne pour le moment.</p><button class="primary" type="button" (click)="openCreate()" [disabled]="busy()">Créer un objectif</button></div>
+} @else {
+  <ul class="goal-grid" aria-label="Objectifs d'épargne">
+    @for (goal of goals(); track goal.id) {
+      <li class="panel goal-card" [class.achieved]="goal.progressPercent >= 100">
+        <h2>{{ goal.name }}</h2>
+        <dl class="goal-details"><div><dt>Objectif</dt><dd>{{ goal.targetAmount | financialAmount }}</dd></div><div><dt>Épargné</dt><dd>{{ goal.savedAmount | financialAmount }}</dd></div><div><dt>Restant</dt><dd [class.surplus]="goal.remainingAmount < 0">{{ goal.remainingAmount | financialAmount }}</dd></div><div><dt>Date cible</dt><dd>{{ goal.targetDate ? formatDate(goal.targetDate) : 'Aucune date cible' }}</dd></div></dl>
+        <p>Progression : <strong>{{ formatPercent(goal.progressPercent) }}</strong></p>
+        <div class="goal-progress" role="progressbar" [attr.aria-label]="'Progression de ' + goal.name" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressWidth(goal.progressPercent)" [attr.aria-valuetext]="formatPercent(goal.progressPercent)"><span [style.width.%]="progressWidth(goal.progressPercent)"></span></div>
+        @if (goal.progressPercent >= 100) { <p class="achievement">Objectif atteint</p> }
+        <div class="actions"><button class="secondary" type="button" (click)="openEdit(goal)" [disabled]="busy()" [attr.aria-label]="'Modifier l’objectif ' + goal.name">Modifier</button><button class="danger" type="button" (click)="askDelete(goal)" [disabled]="busy()" [attr.aria-label]="'Supprimer l’objectif ' + goal.name">Supprimer</button></div>
+      </li>
+    }
+  </ul>
+}
