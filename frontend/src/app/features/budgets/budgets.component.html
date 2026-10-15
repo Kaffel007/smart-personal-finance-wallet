@@ -1,0 +1,63 @@
+<div class="page-heading">
+  <div><p class="eyebrow">VOTRE PLANIFICATION</p><h1>Budgets</h1><p class="muted">Planifiez vos dépenses et suivez leur utilisation.</p></div>
+  <button class="primary" type="button" (click)="openCreate()" [disabled]="busy() || categoriesLoading()">Nouveau budget</button>
+</div>
+@if (feedback()) { <p class="feedback" role="status">{{ feedback() }}</p> }
+@if (categoriesLoading()) { <p role="status">Chargement des catégories…</p> }
+@if (categoriesError()) { <p class="error-banner" role="alert">{{ categoriesError() }}</p><button class="secondary" type="button" (click)="loadCategories()">Réessayer les catégories</button> }
+@if (!categoriesLoading() && !categoriesError() && categories().length === 0) {
+  <div class="panel"><p>Aucune catégorie de dépense disponible.</p><a routerLink="/categories">Créer une catégorie</a></div>
+}
+@if (showForm()) {
+  <section class="panel" aria-labelledby="budget-form-title">
+    <h2 id="budget-form-title">{{ editing() ? 'Modifier le budget' : 'Nouveau budget' }}</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="saving()">
+      <fieldset class="form-grid" [disabled]="busy() || categoriesLoading()">
+        <div><label for="budget-category">Catégorie</label>
+          <select id="budget-category" formControlName="categoryId" aria-describedby="budget-category-help" [attr.aria-invalid]="form.controls.categoryId.touched && form.controls.categoryId.invalid">
+            <option [ngValue]="null">Choisir une catégorie</option>
+            @for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }
+          </select>
+          <p id="budget-category-help" class="field-help" [class.field-error]="form.controls.categoryId.touched && form.controls.categoryId.invalid">Une catégorie de dépense est requise.</p>
+        </div>
+        <div><label for="budget-year">Année</label><input id="budget-year" type="number" min="2000" max="2100" step="1" formControlName="year" aria-describedby="budget-year-help" [attr.aria-invalid]="form.controls.year.touched && form.controls.year.invalid"><p id="budget-year-help" class="field-help" [class.field-error]="form.controls.year.touched && form.controls.year.invalid">Année entière de 2000 à 2100.</p></div>
+        <div><label for="budget-month">Mois</label><select id="budget-month" formControlName="month" aria-describedby="budget-month-help" [attr.aria-invalid]="form.controls.month.touched && form.controls.month.invalid">@for (month of months; track $index) { <option [ngValue]="$index + 1">{{ month }}</option> }</select><p id="budget-month-help" class="field-help" [class.field-error]="form.controls.month.touched && form.controls.month.invalid">Choisissez un mois.</p></div>
+        <div><label for="budget-amount">Montant</label><input id="budget-amount" type="number" min="0.0001" step="0.0001" formControlName="amount" aria-describedby="budget-amount-help" [attr.aria-invalid]="form.controls.amount.touched && form.controls.amount.invalid"><p id="budget-amount-help" class="field-help" [class.field-error]="form.controls.amount.touched && form.controls.amount.invalid">Montant requis, strictement positif, inférieur à 10¹⁵ et au plus 4 décimales.</p></div>
+      </fieldset>
+      @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+      <div class="actions"><button class="primary" type="submit" [disabled]="busy() || categoriesLoading() || !!categoriesError() || categories().length === 0">{{ saving() ? 'Enregistrement…' : 'Enregistrer' }}</button><button class="secondary" type="button" (click)="cancelForm()" [disabled]="busy()">Annuler</button></div>
+    </form>
+  </section>
+}
+@if (pendingDelete(); as budget) {
+  <section class="panel confirmation" aria-labelledby="budget-delete-title" [attr.aria-busy]="deleting()">
+    <h2 id="budget-delete-title">Supprimer ce budget ?</h2><p>{{ budget.categoryName }} · {{ months[budget.month - 1] }} {{ budget.year }} · {{ budget.amount | financialAmount }}</p><p>Cette action est définitive.</p>
+    @if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+    <div class="actions"><button class="danger" type="button" (click)="confirmDelete()" [disabled]="busy()">{{ deleting() ? 'Suppression…' : 'Confirmer la suppression' }}</button><button class="secondary" type="button" (click)="cancelDelete()" [disabled]="busy()">Annuler</button></div>
+  </section>
+}
+<section class="panel" aria-label="Filtres des budgets">
+  <form [formGroup]="filters"><fieldset class="filters" [disabled]="busy()">
+    <div><label for="filter-month">Mois</label><select id="filter-month" formControlName="month">@for (month of months; track $index) { <option [ngValue]="$index + 1">{{ month }}</option> }</select></div>
+    <div><label for="filter-year">Année</label><select id="filter-year" formControlName="year">@for (year of filterYears; track year) { <option [ngValue]="year">{{ year }}</option> }</select></div>
+    <div><label for="filter-category">Catégorie</label><select id="filter-category" formControlName="categoryId"><option [ngValue]="null">Toutes les catégories</option>@for (category of categories(); track category.id) { <option [ngValue]="category.id">{{ category.name }}</option> }</select></div>
+  </fieldset></form>
+</section>
+@if (loading()) { <p role="status">Chargement des budgets…</p> }
+@else if (listError()) { <p class="error-banner" role="alert">{{ listError() }}</p><button class="secondary" type="button" (click)="load()">Réessayer les budgets</button> }
+@else if (budgets().length === 0) {
+  <div class="panel"><p>{{ filters.controls.categoryId.value !== null ? 'Aucun budget pour cette catégorie et cette période.' : 'Aucun budget défini pour cette période.' }}</p><button class="primary" type="button" (click)="openCreate()" [disabled]="busy() || categoriesLoading()">Créer un budget</button></div>
+} @else {
+  <ul class="budget-grid" aria-label="Budgets">
+    @for (budget of budgets(); track budget.id) {
+      <li class="panel budget-card" [class.over-budget]="budget.usagePercent > 100">
+        <h2>{{ budget.categoryName }}</h2>
+        <dl class="budget-details"><div><dt>Budget</dt><dd>{{ budget.amount | financialAmount }}</dd></div><div><dt>Dépensé</dt><dd>{{ budget.spent | financialAmount }}</dd></div><div><dt>Restant</dt><dd [class.negative]="budget.remaining < 0">{{ budget.remaining | financialAmount }}</dd></div></dl>
+        <p>Utilisation : <strong>{{ formatPercent(budget.usagePercent) }}</strong></p>
+        <div class="budget-progress" role="progressbar" [attr.aria-label]="'Utilisation du budget ' + budget.categoryName" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressWidth(budget.usagePercent)" [attr.aria-valuetext]="formatPercent(budget.usagePercent)"><span [style.width.%]="progressWidth(budget.usagePercent)"></span></div>
+        @if (budget.usagePercent > 100) { <p class="negative">Budget dépassé</p> }
+        <div class="actions"><button class="secondary" type="button" (click)="openEdit(budget)" [disabled]="busy() || categoriesLoading()" [attr.aria-label]="'Modifier le budget ' + budget.categoryName">Modifier</button><button class="danger" type="button" (click)="askDelete(budget)" [disabled]="busy()" [attr.aria-label]="'Supprimer le budget ' + budget.categoryName">Supprimer</button></div>
+      </li>
+    }
+  </ul>
+}

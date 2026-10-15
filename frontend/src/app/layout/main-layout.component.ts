@@ -13,7 +13,7 @@ import { AuthService } from '../core/auth.service';
           <a routerLink="/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page">Tableau de bord</a>
           <a routerLink="/transactions" routerLinkActive="active" ariaCurrentWhenActive="page">Transactions</a>
           <a routerLink="/categories" routerLinkActive="active" ariaCurrentWhenActive="page">Catégories</a>
-          <span class="nav-pending">Budgets <small>À venir</small></span>
+          <a routerLink="/budgets" routerLinkActive="active" ariaCurrentWhenActive="page">Budgets</a>
           <span class="nav-pending">Objectifs d'épargne <small>À venir</small></span>
         </nav>
         <button class="logout" type="button" (click)="auth.logout()">Déconnexion</button>

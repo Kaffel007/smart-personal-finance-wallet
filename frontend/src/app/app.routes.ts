@@ -8,6 +8,7 @@ export const routes: Routes = [
     { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
     { path: 'transactions', canActivate: [authGuard], loadComponent: () => import('./features/transactions/transactions.component').then(m => m.TransactionsComponent) },
     { path: 'categories', canActivate: [authGuard], loadComponent: () => import('./features/categories/categories.component').then(m => m.CategoriesComponent) },
+    { path: 'budgets', canActivate: [authGuard], loadComponent: () => import('./features/budgets/budgets.component').then(m => m.BudgetsComponent) },
     { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   ] },
   { path: '**', redirectTo: '' },

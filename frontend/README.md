@@ -24,7 +24,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 - Une réponse protégée HTTP 401 efface la session et redirige vers login.
 - Guard de navigation et récupération du profil après rafraîchissement.
 - Déconnexion : suppression du token et du profil, redirection vers login.
-- Transactions et catégories accessibles depuis le layout ; budgets et objectifs encore à venir.
+- Transactions, catégories et budgets accessibles depuis le layout ; objectifs encore à venir.
 
 L'inscription applique les limites backend : noms requis (100 caractères maximum),
 e-mail valide (254 caractères maximum), mot de passe non vide de 12 caractères
@@ -42,15 +42,15 @@ npm run build
 npm test -- --watch=false
 ```
 
-Build de production réussi et 88 tests réussis (Vitest, HttpTestingController et
-RouterTestingHarness), dont 59 tests ajoutés en 4C. Les tests HTTP sont
+Build de production réussi et 134 tests réussis (Vitest, HttpTestingController et
+RouterTestingHarness), dont 59 tests ajoutés en 4C et 46 en 4D. Les tests HTTP sont
 simulés et ne dépendent d'aucun backend réel ni de MySQL.
 
 La phase 4A et CORS ont été validés dans le navigateur par l'utilisateur.
 Le backend attendu écoute sur localhost:8080 avec le profil Spring `dev`,
 qui autorise uniquement http://localhost:4200. Aucun proxy frontend n'est configuré.
-La phase 4B et la synchronisation mois/année sont validées dans le navigateur, selon la confirmation de l'utilisateur. La validation navigateur de 4C reste à effectuer.
-Aucun fichier backend n'a été modifié pendant les phases frontend 4B et 4C.
+Les phases 4B (dont la synchronisation mois/année) et 4C sont validées dans le navigateur, selon la confirmation de l'utilisateur. La validation navigateur de 4D reste à effectuer.
+Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C et 4D.
 
 ## Structure
 
@@ -59,7 +59,8 @@ Aucun fichier backend n'a été modifié pendant les phases frontend 4B et 4C.
 - `src/app/features/dashboard/` : modèle, service HTTP, dashboard, formatage des montants et tests.
 - `src/app/features/categories/` : modèles, service CRUD, page, messages métier et tests.
 - `src/app/features/transactions/` : modèles, service CRUD/filtres, page, validations et tests.
-- `src/app/shared/finance-ui.css` : styles communs aux deux pages.
+- `src/app/features/budgets/` : modèles, service CRUD/filtres, page, styles et tests.
+- `src/app/shared/finance-ui.css` : styles communs aux pages de gestion.
 - `src/app/layout/` : layout connecté et chargement du profil.
 - `src/app/app.routes.ts` : routes lazy-loaded publiques et privées.
 - `src/styles.css` : styles communs et responsive desktop/mobile.
@@ -106,7 +107,7 @@ obsolètes, l'erreur/retry, l'état vide, les dépassements et les trois états 
 ## Phase 4C — Transactions et catégories
 
 Les routes privées `/transactions` et `/categories` sont protégées par AuthGuard
-et disponibles dans le MainLayout. Budgets et objectifs restent marqués À venir.
+et disponibles dans le MainLayout. Budgets disponibles depuis 4D ; objectifs marqués À venir.
 
 `CategoryService` utilise `/api/categories` : getAll(type?), getOne(id), create,
 update et delete. Les DTO contiennent uniquement name/type ; la réponse ajoute id.
@@ -149,5 +150,50 @@ par utilisateur. Aucun fichier backend, migration ou donnée MySQL modifié.
 Validation : 88 tests et build de production réussis. Les tests sont entièrement
 simulés et vérifient contrats HTTP, CRUD, filtres, validations, confirmations,
 conflits, erreurs, feedback et protection des routes.
-4C est implémentée/testée Angular ; validation navigateur réelle restante.
-4D Budgets UI et 4E Savings Goals UI ne sont pas commencées.
+4C est terminée et validée dans le navigateur par l'utilisateur.
+
+## Phase 4D — Budgets UI
+
+`/budgets` est une route privée lazy-loaded protégée par AuthGuard et disponible
+dans MainLayout. Les objectifs d'épargne restent À venir.
+
+`BudgetService` utilise `/api/budgets` : getAll(filters?), getOne(id), create,
+update et delete. HttpParams transmet year/month/categoryId seuls ou combinés.
+Les interfaces Budget, CreateBudgetRequest et UpdateBudgetRequest reproduisent
+les DTO backend inspectés. POST/PUT envoient uniquement categoryId/year/month/amount,
+même si le service reçoit un objet contenant des champs supplémentaires.
+JWT et HTTP 401 restent gérés par l'interceptor existant.
+
+La période initiale est celle du navigateur ; mois français et années courante -3
+à +1, bornées à 2000..2100, suivent la convention Dashboard. Une année enregistrée
+hors de cette plage de sélection reste proposée pour la période active.
+Les filtres rechargent le backend, annulent les requêtes obsolètes et masquent
+les anciennes données pendant le chargement. Un filtre catégorie est disponible.
+
+Le formulaire réactif inline préremplit la période active en création et tous les
+champs en modification. Les catégories sont chargées par GET /api/categories?type=EXPENSE
+et filtrées défensivement ; aucune INCOME ne peut être proposée ou soumise.
+Sans catégorie de dépense, un lien conduit vers `/categories`.
+Année et mois entiers sont limités à 2000..2100 et 1..12 ; le montant est requis,
+positif, inférieur à 10¹⁵ et limité à quatre décimales comme le backend.
+
+Après POST/PUT réussi, le formulaire est fermé/réinitialisé, la période de la
+réponse sélectionnée, le filtre catégorie effacé et un seul GET recharge la liste.
+DELETE exige une confirmation inline ; après HTTP 204, liste et feedback sont
+actualisés. Les doubles soumissions sont bloquées pendant les mutations.
+Les conflits 409 affichent le doublon catégorie/période ; erreurs génériques,
+catégorie invalide, 404, chargements séparés et boutons Réessayer sont gérés.
+
+Les cards affichent amount/spent/remaining/usagePercent du backend sans calcul
+métier local. FinancialAmountPipe garde « unités ». La largeur et aria-valuenow
+sont plafonnés à 100 ; texte et aria-valuetext gardent la vraie valeur backend.
+Au-delà de 100 %, style d'alerte et « Budget dépassé » ; restant négatif visible.
+Grille trois colonnes desktop, deux tablette et une mobile, formulaire adaptatif,
+labels visibles, aides/aria-invalid, focus visible et messages status/alert.
+La logique Dashboard reste inchangée et reflète les mutations au prochain chargement.
+
+Validation : 9 tests service, 35 tests composant et 2 tests route/layout ajoutés ;
+134 tests au total réussis, npm run build et git diff --check réussis.
+Aucune dépendance ajoutée ni modification backend, migration, MySQL ou CORS.
+4D est implémentée/testée Angular ; validation navigateur réelle restante.
+Aucun commit ni push pour 4D ; 4E Savings Goals UI non commencée.
