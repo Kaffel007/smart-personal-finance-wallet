@@ -1,0 +1,51 @@
+<div class="page-heading"><div><p class="eyebrow">ESPACE ADMINISTRATEUR</p><h1>Administration</h1><p class="muted">Gérez les comptes utilisateurs de la plateforme.</p></div></div>
+@if (feedback()) { <p class="feedback" role="status">{{ feedback() }}</p> }
+@if (actionError()) { <p class="error-banner" role="alert">{{ actionError() }}</p> }
+<section aria-labelledby="admin-stats-title" [attr.aria-busy]="statsLoading()">
+  <h2 id="admin-stats-title">Statistiques des comptes</h2>
+  @if (statsLoading()) { <p role="status">Chargement des statistiques…</p> }
+  @else if (statsError()) { <p class="error-banner" role="alert">{{ statsError() }}</p><button class="secondary" type="button" (click)="loadStats()">Réessayer les statistiques</button> }
+  @else if (stats(); as values) {
+    <dl class="stats-grid"><div class="panel"><dt>Utilisateurs</dt><dd>{{ values.totalUsers }}</dd></div><div class="panel"><dt>Comptes actifs</dt><dd>{{ values.activeUsers }}</dd></div><div class="panel"><dt>Comptes bloqués</dt><dd>{{ values.blockedUsers }}</dd></div><div class="panel"><dt>Administrateurs</dt><dd>{{ values.adminUsers }}</dd></div></dl>
+  }
+</section>
+<section aria-labelledby="admin-users-title">
+  <h2 id="admin-users-title">Comptes utilisateurs</h2>
+  <form class="panel" (submit)="$event.preventDefault(); search()">
+    <fieldset class="search-form" [disabled]="busy()">
+      <div><label for="admin-search">Rechercher par nom ou e-mail</label><input id="admin-search" type="search" [formControl]="searchControl"></div>
+      <button class="primary" type="submit" [disabled]="busy()">Rechercher</button>
+      <button class="secondary" type="button" (click)="resetSearch()" [disabled]="busy()">Réinitialiser</button>
+    </fieldset>
+  </form>
+  @if (pendingBlock(); as user) {
+    <section class="panel confirmation" aria-labelledby="block-title" [attr.aria-busy]="busy()">
+      <h3 id="block-title">Bloquer ce compte ?</h3><p>L'utilisateur ne pourra plus se connecter.</p><p>{{ user.firstName }} {{ user.lastName }} · {{ user.email }}</p>
+      <div class="actions"><button class="danger" type="button" (click)="confirmBlock()" [disabled]="busy()">{{ busy() ? 'Blocage…' : 'Confirmer le blocage' }}</button><button class="secondary" type="button" (click)="cancelBlock()" [disabled]="busy()">Annuler</button></div>
+    </section>
+  }
+  <div [attr.aria-busy]="usersLoading()">
+    @if (usersLoading()) { <p role="status">{{ submittedSearch() ? 'Recherche des utilisateurs…' : 'Chargement des utilisateurs…' }}</p> }
+    @else if (usersError()) { <p class="error-banner" role="alert">{{ usersError() }}</p><button class="secondary" type="button" (click)="loadUsers()">Réessayer les utilisateurs</button> }
+    @else if (users().length === 0) { <p class="panel">{{ submittedSearch() ? 'Aucun utilisateur ne correspond à votre recherche.' : 'Aucun utilisateur à afficher.' }}</p> }
+    @else {
+      <ul class="account-grid" aria-label="Comptes utilisateurs">
+        @for (user of users(); track user.id) {
+          <li class="panel account-card">
+            <h3>{{ user.firstName }} {{ user.lastName }}</h3><p class="account-email">{{ user.email }}</p>
+            <dl class="account-details"><div><dt>Rôle</dt><dd>{{ user.role === 'ADMIN' ? 'ADMIN · Administrateur' : 'USER · Utilisateur' }}</dd></div>
+              <div><dt>Statut</dt><dd class="account-status"><span [class.blocked]="user.blocked" [class.disabled]="!user.enabled">{{ user.blocked ? 'Bloqué' : user.enabled ? 'Actif' : 'Désactivé' }}</span>@if (user.blocked && !user.enabled) { <span class="disabled">Désactivé</span> }</dd></div>
+              <div><dt>Date de création</dt><dd>{{ formatDate(user.createdAt) }}</dd></div>
+            </dl>
+            <div class="actions">
+              @if (canManage(user)) {
+                @if (user.blocked) { <button class="secondary" type="button" (click)="unblock(user)" [disabled]="busy()" [attr.aria-label]="'Débloquer ' + user.firstName + ' ' + user.lastName">{{ unblockingId() === user.id ? 'Déblocage…' : 'Débloquer' }}</button> }
+                @else { <button class="danger" type="button" (click)="askBlock(user)" [disabled]="busy()" [attr.aria-label]="'Bloquer ' + user.firstName + ' ' + user.lastName">Bloquer</button> }
+              } @else { <span class="badge">{{ user.role === 'ADMIN' ? 'Administrateur' : 'Compte connecté' }}</span> }
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</section>

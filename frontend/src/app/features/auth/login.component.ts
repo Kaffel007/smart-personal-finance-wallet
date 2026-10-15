@@ -58,7 +58,7 @@ export class LoginComponent {
       switchMap(() => this.auth.getCurrentUser()),
       finalize(() => this.loading.set(false)),
     ).subscribe({
-      next: () => { this.form.reset(); void this.router.navigateByUrl('/dashboard'); },
+      next: user => { this.form.reset(); void this.router.navigateByUrl(user.role === 'ADMIN' ? '/admin' : '/dashboard'); },
       error: () => {
         this.auth.logout();
         this.form.controls.password.reset();

@@ -117,7 +117,7 @@ describe('Private routes and forms', () => {
     await harness.navigateByUrl('/dashboard', LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login');
   });
-  it.each(['/transactions', '/categories', '/budgets', '/savings-goals'])('protects the private route %s', async path => {
+  it.each(['/transactions', '/categories', '/budgets', '/savings-goals', '/admin'])('protects the private route %s', async path => {
     const harness = await RouterTestingHarness.create();
     await harness.navigateByUrl(path, LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login');
@@ -196,7 +196,7 @@ describe('Private routes and forms', () => {
     http.expectOne(`${API_BASE_URL}/auth/login`).flush({ accessToken: testToken, tokenType: 'Bearer', expiresInSeconds: 3600, user });
     http.expectOne(`${API_BASE_URL}/auth/me`).flush(user);
     await harness.fixture.whenStable();
-    http.expectOne(`${API_BASE_URL}/auth/me`).flush(user);
+    http.expectNone(`${API_BASE_URL}/auth/me`);
     harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/dashboard');
     expect(harness.routeNativeElement?.textContent).toContain('Bienvenue Test');

@@ -15,7 +15,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 
 ## Phase 4A
 
-- `/login` : connexion, puis récupération du profil via `/api/auth/me`.
+- `/login` : connexion, puis récupération du profil via `/api/auth/me` ; USER vers `/dashboard`, ADMIN vers `/admin` depuis 5B.
 - `/register` : inscription, puis redirection vers `/login`.
 - `/dashboard` : layout privé et dashboard connecté depuis la phase 4B.
 - `/` et routes inconnues : dashboard si un token existe, login sinon.
@@ -24,7 +24,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 - Une réponse protégée HTTP 401 efface la session et redirige vers login.
 - Guard de navigation et récupération du profil après rafraîchissement.
 - Déconnexion : suppression du token et du profil, redirection vers login.
-- Transactions, catégories, budgets et objectifs d'épargne accessibles depuis le layout.
+- Navigation USER : transactions, catégories, budgets et objectifs d'épargne ; navigation ADMIN : Administration, depuis 5B.
 
 L'inscription applique les limites backend : noms requis (100 caractères maximum),
 e-mail valide (254 caractères maximum), mot de passe non vide de 12 caractères
@@ -42,8 +42,8 @@ npm run build
 npm test -- --watch=false
 ```
 
-Build de production réussi et 181 tests réussis (Vitest, HttpTestingController et
-RouterTestingHarness), dont 59 tests ajoutés en 4C, 46 en 4D et 47 en 4E. Les tests HTTP sont
+Build de production réussi et 222 tests réussis (Vitest, HttpTestingController et
+RouterTestingHarness), dont 59 tests ajoutés en 4C, 46 en 4D, 47 en 4E et 41 en 5B. Les tests HTTP sont
 simulés et ne dépendent d'aucun backend réel ni de MySQL.
 
 La phase 4A et CORS ont été validés dans le navigateur par l'utilisateur.
@@ -61,6 +61,8 @@ Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C, 4D 
 - `src/app/features/transactions/` : modèles, service CRUD/filtres, page, validations et tests.
 - `src/app/features/budgets/` : modèles, service CRUD/filtres, page, styles et tests.
 - `src/app/features/savings-goals/` : modèles, service CRUD, validations, page, styles et tests.
+- `src/app/features/admin/` : modèles de comptes/statistiques, service, page et tests.
+- `src/app/core/admin.guard.ts` : contrôle du rôle ADMIN depuis le profil authentifié.
 - `src/app/shared/finance-ui.css` : styles communs aux pages de gestion.
 - `src/app/layout/` : layout connecté et chargement du profil.
 - `src/app/app.routes.ts` : routes lazy-loaded publiques et privées.
@@ -246,3 +248,57 @@ Les tests HTTP sont simulés ; validation navigateur réelle de 4E restante.
 Aucune dépendance ajoutée, aucun backend, migration, MySQL ou CORS modifié.
 Pas de SavingsContribution, de liaison automatique aux transactions, d'Admin,
 de ML, de notifications ou de graphiques avancés. Aucun commit ni push pour 4E.
+
+## Phase 5B — Frontend Admin MVP
+
+La page `/admin` est lazy-loaded, protégée par authGuard et adminGuard. Sans token,
+redirection `/login` ; profil USER vers `/dashboard` ; profil ADMIN autorisé.
+adminGuard utilise AuthService.currentUser ou GET /api/auth/me si le profil n'est
+pas encore chargé, notamment après rafraîchissement. Un échec de lecture du profil
+ferme la session et retourne au login. Le JWT n'est jamais décodé pour connaître le rôle.
+MainLayout réutilise le profil chargé afin d'éviter un second appel immédiat à /me.
+
+Après POST /api/auth/login puis GET /api/auth/me, la réponse /me décide de la
+destination : USER /dashboard, ADMIN /admin. Le guard des pages publiques renvoie
+aussi un ADMIN dont le profil est connu vers /admin. MainLayout conserve les cinq
+liens USER et propose uniquement Administration pour ADMIN, avec déconnexion et
+indicateur « Espace administrateur ». Aucun changement au backend ni au stockage JWT.
+
+`AdminUser` reproduit id/firstName/lastName/email/role/enabled/blocked/createdAt ;
+`AdminStats` reproduit totalUsers/activeUsers/blockedUsers/adminUsers.
+Le service frontend AdminService expose :
+
+- getStats() : GET /api/admin/stats ;
+- getUsers(search?) : GET /api/admin/users, HttpParams search normalisé et omis si vide ;
+- getUser(id) : GET /api/admin/users/{id} ;
+- blockUser(id) / unblockUser(id) : PUT /api/admin/users/{id}/block ou /unblock, sans payload de compte.
+
+Authorization et HTTP 401 restent entièrement gérés par l'interceptor existant.
+La page charge statistiques et utilisateurs indépendamment, avec erreurs et retry
+séparés. Quatre cartes affichent exclusivement les compteurs backend. Les comptes
+restent dans l'ordre reçu et montrent identité, e-mail, rôle, statut et date française.
+Les états bloqué et désactivé sont affichés ensemble si nécessaire.
+
+La recherche part uniquement au submit (bouton ou Entrée), sans requête à chaque
+frappe ; Réinitialiser recharge la liste complète. Les requêtes obsolètes sont
+annulées. Le chargement masque les anciennes données, avec message spécifique en recherche.
+La liste présente déjà tous les champs de compte ; getUser reste disponible sans
+ajouter de page ou panneau de détail.
+
+Bloquer exige une confirmation inline ; Débloquer est direct. Seuls les comptes
+USER autres que le compte connecté disposent de ces actions. Aucun bouton pour
+ADMIN, ni suppression ou changement de rôle. Les doubles clics sont bloqués
+pendant la mutation ; après succès, liste de la recherche soumise et statistiques
+sont rechargées depuis le backend et un feedback est annoncé.
+Les erreurs de mutation 403/404/409 et générales ont des messages locaux, sans
+afficher le message technique ou le JSON reçu. Aucune donnée financière, aucun
+hash/mot de passe/JWT n'est affiché. Les autorisations backend restent déterminantes.
+
+Styles finance-ui.css réutilisés, cartes statistiques 4/2/1 colonnes et comptes
+2/1 colonnes selon largeur ; labels, boutons nommés, focus visible, status/alert,
+confirmation accessible et formulaire utilisable au clavier. Aucune dépendance ajoutée.
+
+Validation : 8 tests service, 22 tests composant et 11 nouveaux tests auth/guard,
+soit 222 tests réussis au total. npm run build et git diff --check réussis.
+Les tests HTTP sont simulés ; validation navigateur réelle de 5B restante.
+Backend, migrations, MySQL et CORS inchangés. Aucun commit ni push ; ML non commencé.
