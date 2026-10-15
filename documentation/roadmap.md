@@ -52,7 +52,7 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Validation navigateur reelle et correction de la synchronisation mois/annee terminees, confirmees par l'utilisateur.
 - Backend, migrations, MySQL et dependances inchanges.
 
-### 4C Transactions et categories — Implementee et testee Angular
+### 4C Transactions et categories — Terminee
 
 - Routes privees /transactions et /categories, navigation et AuthGuard.
 - CategoryService : CRUD et filtre type ; modeles conformes au backend.
@@ -65,10 +65,24 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Styles responsive, chargements, erreurs, etats vides et accessibilite.
 - Aucune dependance ajoutee ; JWT/interceptor existants reutilises.
 - Validation : 88 tests Angular reussis et build de production reussi.
-- Validation navigateur reelle de 4C restante.
+- Validation navigateur reelle terminee, confirmee par l'utilisateur ; documentation, commit et push confirmes.
 - Backend, migrations, MySQL et CORS inchanges.
 
-### 4D Budgets UI — Non commencee
+### 4D Budgets UI — Implementee et testee Angular
+
+- Route privee /budgets et lien MainLayout ; objectifs d'epargne restent A venir.
+- Modeles conformes aux DTO backend ; BudgetService CRUD et filtres year/month/categoryId.
+- Periode courante du navigateur, mois francais, selection annee selon la convention Dashboard.
+- Categories EXPENSE uniquement ; lien /categories si aucune categorie de depense.
+- Formulaire reactif, validations backend, creation/modification et suppression confirmee.
+- Apres enregistrement : periode du budget selectionnee, filtre categorie efface, liste rechargee.
+- Montants et progression du backend ; barres plafonnees, pourcentage reel et restant negatif visibles.
+- Doublon 409, erreurs metier/generiques, retry, feedback, chargement et blocage des doubles soumissions.
+- Cards responsive, labels, focus visible, aides de validation et barres ARIA.
+- Validation : 134 tests Angular reussis (46 nouveaux), build production et git diff --check reussis.
+- Validation navigateur reelle de 4D restante.
+- Backend, logique Dashboard, migrations, MySQL, CORS et dependances inchanges.
+- Aucun commit ni push pour 4D ; aucune phase 4E commencee.
 
 ### 4E Savings Goals UI — Non commencee
 
@@ -86,4 +100,5 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 4C s'arrete ici. Aucun commit ni push pour cette phase ; aucune phase 4D commencee.
+La phase 4D s'arrete ici, implementee et testee Angular ; validation navigateur reelle restante.
+Aucun commit ni push pour 4D ; aucune phase 4E commencee.

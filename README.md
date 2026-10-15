@@ -79,8 +79,9 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 4. Frontend Angular | En cours |
 | 4A Fondation et authentification | Terminee et validee navigateur |
 | 4B Dashboard frontend | Terminee et validee navigateur |
-| 4C Transactions et categories frontend | Implementee/testee Angular ; validation navigateur restante |
-| 4D Budgets UI / 4E Savings Goals UI | Non commencees |
+| 4C Transactions et categories frontend | Terminee et validee navigateur |
+| 4D Budgets UI | Implementee/testee Angular ; validation navigateur restante |
+| 4E Savings Goals UI | Non commencee |
 | Administration, notifications, export et ML | Planifies |
 
 La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
@@ -146,7 +147,7 @@ L'interceptor ajoute Authorization Bearer uniquement aux endpoints proteges de
 l'API configuree et supprime la session en cas de reponse 401 protegee. Le guard
 protege `/dashboard` ; le backend reste responsable de l'autorisation et de
 l'isolation des donnees. Le layout responsive contient la navigation et logout.
-Transactions et categories sont accessibles ; budgets et objectifs restent a venir. Le dashboard est
+Transactions, categories et budgets sont accessibles ; objectifs restent a venir. Le dashboard est
 maintenant connecte aux statistiques en phase 4B.
 La racine et les routes inconnues redirigent vers dashboard si un token existe,
 sinon vers login. Le profil est recharge apres un rafraichissement.
@@ -165,7 +166,7 @@ La phase 4A et le CORS dev ont ete valides dans le navigateur par l'utilisateur.
 Le backend attendu sur localhost:8080 doit utiliser le profil Spring dev pour
 autoriser l'origine http://localhost:4200.
 
-Details : [frontend/README.md](frontend/README.md). Transactions et categories sont implementees en 4C ; budgets et objectifs UI restent a venir.
+Details : [frontend/README.md](frontend/README.md). Transactions et categories sont terminees en 4C ; budgets UI implementes en 4D ; objectifs UI restent a venir.
 
 ## Frontend — Phase 4B Dashboard
 
@@ -215,8 +216,35 @@ uniquement visuels. Un succes ferme le formulaire et actualise la liste avec fee
 
 Pages responsive avec cartes lisibles sur mobile, labels, focus visible, messages
 accessibles, chargements, actions desactivees pendant mutations, erreurs/retry et
-etats vides. Budgets et objectifs restent a venir. Aucune dependance ajoutee.
+etats vides. Budgets accessibles depuis 4D ; objectifs restent a venir. Aucune dependance ajoutee.
 
 Validation : npm test -- --watch=false : 88 tests reussis ; npm run build reussi.
-La validation navigateur reelle de 4C reste a effectuer. Aucun fichier backend,
-migration, MySQL ou CORS modifie. Aucun commit ni push ; aucune phase 4D commencee.
+La validation navigateur reelle de 4C est confirmee par l'utilisateur ; cette phase
+est documentee, commitee et poussee selon sa confirmation. Aucun fichier backend,
+migration, MySQL ou CORS modifie pendant cette phase frontend.
+
+## Frontend — Phase 4D Budgets UI
+
+La route privee `/budgets`, protegee par AuthGuard, est accessible depuis MainLayout.
+La page propose une grille responsive, la periode courante puis des filtres mois,
+annee et categorie de depense, combines dans GET /api/budgets.
+
+BudgetService couvre GET liste/detail, POST, PUT et DELETE. Les DTO suivent les
+contrats backend et n'envoient que categoryId, year, month et amount.
+Le formulaire reactif utilise exclusivement les categories EXPENSE et valide
+annee 2000..2100, mois 1..12 et montant positif avec au plus quatre decimales.
+La suppression exige une confirmation explicite ; les doublons HTTP 409 ont un
+message metier. Chaque mutation recharge la liste et annonce son succes.
+Apres creation/modification, la periode du budget enregistre est selectionnee et
+le filtre categorie efface pour afficher le budget concerne.
+
+Les cartes affichent montant prevu, depense, restant et utilisation fournis par
+le backend. FinancialAmountPipe conserve le suffixe « unités ». Les barres CSS et
+ARIA sont bornees a 0..100 ; le texte et aria-valuetext conservent le pourcentage
+reel. Un depassement affiche « Budget dépassé » et le restant negatif est conserve.
+Chargements, etats vides, erreurs/retry, labels et focus visible sont pris en charge.
+
+Validation : 134 tests Angular reussis (46 nouveaux), build de production reussi
+et git diff --check reussi. Aucun backend, migration, MySQL, CORS ou dependance
+modifie ; logique Dashboard inchangee. Validation navigateur reelle de 4D restante.
+Aucun commit ni push pour 4D ; 4E Savings Goals UI non commencee.
