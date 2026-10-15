@@ -1,5 +1,8 @@
 package com.smartfinance.wallet.common.exception;
 
+import com.smartfinance.wallet.admin.exception.AdminAccountActionForbiddenException;
+import com.smartfinance.wallet.admin.exception.AdminSelfBlockException;
+import com.smartfinance.wallet.admin.exception.UserNotFoundException;
 import com.smartfinance.wallet.category.exception.CategoryAlreadyExistsException;
 import com.smartfinance.wallet.category.exception.CategoryNotFoundException;
 import com.smartfinance.wallet.category.exception.CategoryInUseException;
@@ -27,6 +30,18 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleUserNotFound(
+            UserNotFoundException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler({AdminSelfBlockException.class, AdminAccountActionForbiddenException.class})
+    public ResponseEntity<ApiErrorResponse> handleAdminAccountConflict(
+            RuntimeException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(
