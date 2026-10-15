@@ -28,7 +28,9 @@ Validation H2 et MySQL 8 effectuee lors des phases backend.
 
 Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 
-## 4. Frontend Angular — En cours
+## 4. Frontend Angular utilisateur — Termine
+
+Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilisateur.
 
 ### 4A Fondation et authentification — Terminee
 
@@ -83,7 +85,7 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Validation navigateur reelle terminee ; documentation, commit et push confirmes par l'utilisateur.
 - Backend, logique Dashboard, migrations, MySQL, CORS et dependances inchanges.
 
-### 4E Savings Goals UI — Implementee et testee Angular
+### 4E Savings Goals UI — Terminee
 
 - Route privee /savings-goals, AuthGuard, lien actif MainLayout sans badge A venir.
 - Modeles conformes aux DTO backend ; SavingsGoalService CRUD /api/savings-goals.
@@ -96,16 +98,43 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Chargements, doubles soumissions bloquees, erreurs locales, retry et etat vide.
 - Cards et formulaire responsive, labels, focus visible et progression ARIA.
 - Validation : 181 tests Angular reussis (47 nouveaux), build production et git diff --check reussis.
-- Validation navigateur reelle de 4E restante.
+- MVP utilisateur incluant 4E confirme termine par l'utilisateur.
 - Backend, Dashboard, migrations, MySQL, CORS et dependances inchanges.
 - Aucun SavingsContribution, liaison automatique aux transactions, Admin, ML ou notification ajoute.
-- Aucun commit ni push pour 4E ; aucune phase suivante commencee.
+
+## 5. Administration — En cours
+
+### 5A Backend Admin MVP — Implemente et teste automatiquement
+
+- GET /api/admin/users : liste par id decroissant et recherche optionnelle nom complet/e-mail.
+- GET /api/admin/users/{id} : informations de compte uniquement ; 404 si absent.
+- PUT /api/admin/users/{id}/block et /unblock : modification transactionnelle de blocked sur USER uniquement.
+- Auto-blocage interdit ; toute action block/unblock sur ADMIN interdite, HTTP 409.
+- SecurityConfig protege /api/admin/** par ROLE_ADMIN : 401 anonyme, 403 USER.
+- JWT existants et connexion refuses pendant le blocage, via relecture du compte deja existante.
+- Deblocage sans modification de enabled ; connexion possible si le compte est active.
+- DTO AdminUserResponse limite aux informations de compte, sans hash, mot de passe ou finances.
+- GET /api/admin/stats : totalUsers, activeUsers (enabled et non blocked), blockedUsers et adminUsers.
+- Inscription toujours USER ; injection de role/roles/authorities sans elevation de privilege.
+- Tests de confidentialite : un ADMIN reste limite a ses propres finances sur les endpoints existants.
+- Validation H2 : 246 tests backend reussis dont 41 nouveaux, aucun echec ni test ignore.
+- mvnw.cmd test, package -DskipTests apres tests et git diff --check reussis.
+- Aucun changement AppUser, schema, migration, frontend, CORS ou dependance ; aucun test manuel MySQL.
+- Aucun commit ni push pour 5A ; aucune suppression de compte ni modification de role.
+
+### 5B Frontend Admin — Non commence
+
+Interface de gestion des comptes et statistiques a developper apres validation explicite de 5A.
+
+## Machine Learning — Non commence
+
+Prevu apres l'administration ; aucune implementation ML pendant 5A.
 
 ## Phases futures — Planifiees
 
 - Referentiels globaux et modes de paiement : gestion admin et restrictions de roles.
 - Contributions aux objectifs d'epargne et evolutions des modules metier.
-- Administration : utilisateurs, blocage/deblocage, categories globales, parametres et journal.
+- Evolutions administration : categories globales, parametres et journal.
   Aucun acces aux mots de passe ni modification des transactions privees par un administrateur.
 - Notifications et recommandations statistiques : alertes budgets et anomalies par regles.
 - Export CSV : donnees strictement limitees a l'utilisateur authentifie.
@@ -115,5 +144,5 @@ Ces modules ont ete valides sur H2 et MySQL 8 lors des phases precedentes.
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 4E s'arrete ici, implementee et testee Angular ; validation navigateur reelle restante.
-Aucun commit ni push pour 4E ; aucune phase suivante commencee.
+La phase 5A s'arrete ici, implementee et testee automatiquement sur H2.
+Aucun commit ni push pour 5A ; 5B et Machine Learning non commences.

@@ -19,7 +19,7 @@ Le projet est developpe progressivement dans le cadre du PFA. La premiere versio
 ## Acteurs
 
 - `USER` : gere ses informations financieres personnelles.
-- `ADMIN` : supervise la plateforme et gere certains parametres globaux.
+- `ADMIN` : gere les comptes utilisateurs, bloque/debloque les comptes USER et consulte les statistiques de comptes de la plateforme. Il n'accede pas aux finances privees des autres utilisateurs.
 
 ## Fonctionnalites principales prevues
 
@@ -76,19 +76,23 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 2. Authentification et securite backend | Termine |
 | 3A Categories / 3B Transactions / 3C Budgets | Termines |
 | 3D Savings Goals / 3E Dashboard backend | Termines |
-| 4. Frontend Angular | En cours |
+| 4. Frontend Angular utilisateur | Termine (MVP utilisateur confirme par l'utilisateur) |
 | 4A Fondation et authentification | Terminee et validee navigateur |
 | 4B Dashboard frontend | Terminee et validee navigateur |
 | 4C Transactions et categories frontend | Terminee et validee navigateur |
 | 4D Budgets UI | Terminee et validee navigateur |
-| 4E Savings Goals UI | Implementee/testee Angular ; validation navigateur restante |
-| Administration, notifications, export et ML | Planifies |
+| 4E Savings Goals UI | Terminee (MVP utilisateur confirme par l'utilisateur) |
+| 5. Administration | En cours |
+| 5A Backend Admin MVP | Implemente/teste automatiquement sur H2 |
+| 5B Frontend Admin | Non commence |
+| Machine Learning | Non commence ; prevu apres administration |
+| Notifications et export | Planifies |
 
 La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
 
 ## Etat actuel
 
-Le backend MVP (phases 1, 2 et 3A a 3E) est termine ; la phase 4 Frontend est en cours. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
+Le MVP utilisateur (backend et frontend des phases 1 a 4E) est confirme termine par l'utilisateur. La phase 5A Backend Admin est implementee et testee automatiquement sur H2 ; le frontend Admin et le ML ne sont pas commences. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
@@ -275,7 +279,63 @@ labels, focus visible et progression ARIA sont geres. Grille responsive desktop,
 deux colonnes tablette et une mobile. La logique Dashboard reste inchangee.
 
 Validation : 181 tests Angular reussis (47 nouveaux), npm run build et
-git diff --check reussis. Validation navigateur reelle de 4E restante.
+git diff --check reussis. Le MVP utilisateur incluant 4E est confirme termine par l'utilisateur.
 Aucune dependance ajoutee ; backend, migrations, MySQL et CORS inchanges.
 Aucun SavingsContribution, liaison automatique aux transactions, Admin, ML ou
-notification ajoute. Aucun commit ni push pour 4E ; aucune phase suivante commencee.
+notification ajoute dans cette sous-phase frontend.
+
+## Backend — Phase 5A Admin MVP
+
+Les API Admin gerent uniquement les comptes. Toutes les routes `/api/admin/**`
+exigent `ROLE_ADMIN` : absence d'authentification = HTTP 401, compte USER = HTTP 403.
+La regle est appliquee par SecurityConfig avant la regle generale `/api/**`.
+Les JWT restent controles par le filtre existant, avec relecture du compte et de
+son role en base a chaque requete. Le bootstrap administrateur existant reste inchange.
+
+| Methode | Endpoint | Comportement |
+| --- | --- | --- |
+| GET | `/api/admin/users` | Liste des comptes par id decroissant |
+| GET | `/api/admin/users?search=Sara` | Recherche partielle sur nom complet ou e-mail, insensible a la casse ; espaces externes retires |
+| GET | `/api/admin/users/{id}` | Detail du compte ; HTTP 404 si absent |
+| PUT | `/api/admin/users/{id}/block` | Bloque un USER ; retourne son DTO de compte |
+| PUT | `/api/admin/users/{id}/unblock` | Debloque un USER ; retourne son DTO de compte |
+| GET | `/api/admin/stats` | Compteurs de comptes uniquement |
+
+`AdminUserResponse` expose exactement id, firstName, lastName, email, role,
+enabled, blocked et createdAt. Aucun mot de passe, hash, JWT, champ financier ou
+information interne supplementaire n'est expose. La recherche utilise des
+parametres lies et traite `%`/`_` comme des caracteres litteraux. Une recherche
+vide retourne la liste complete, sans pagination pour ce MVP.
+
+`AdminService` porte les regles metier et les transactions DB. Les operations
+block/unblock modifient uniquement blocked, sans modifier enabled, role ou mot
+de passe. Elles sont repetables. Un compte bloque ne peut plus se connecter et
+ses JWT deja emis sont refuses tant qu'il reste bloque. Apres deblocage, une
+nouvelle connexion est possible si enabled=true. Aucun mecanisme de revocation
+permanente des JWT n'est ajoute ; la securite existante controle l'etat courant.
+
+L'auto-blocage retourne HTTP 409 avec un message explicite. Bloquer ou debloquer
+un compte ADMIN, y compris son propre compte, est interdit avec HTTP 409.
+UserNotFoundException, AdminSelfBlockException et AdminAccountActionForbiddenException
+sont traduites par GlobalExceptionHandler au format d'erreur commun.
+L'inscription publique impose toujours USER ; les champs role/roles/authorities
+injectes ne permettent pas d'obtenir ADMIN.
+
+`AdminStatsResponse` contient uniquement :
+
+- totalUsers : tous les comptes (aucun soft delete dans le modele actuel) ;
+- activeUsers : enabled=true et blocked=false, ADMIN inclus ;
+- blockedUsers : blocked=true, meme si enabled=false ;
+- adminUsers : role=ADMIN, quel que soit l'etat enabled/blocked.
+
+Aucune API Admin ne consulte les transactions, categories, budgets ou objectifs
+personnels. Les endpoints financiers existants restent limites au proprietaire,
+y compris pour un ADMIN. Aucune suppression de compte ni modification de role
+n'est implementee. Le modele AppUser et les migrations V1 a V5 sont inchanges.
+
+Validation depuis `backend` : `./mvnw.cmd test` reussi, 246 tests dont 41 nouveaux
+tests d'integration Admin, sans echec ni test ignore. `./mvnw.cmd package -DskipTests`
+reussi apres cette suite ; JAR executable dans `backend/target/`.
+Les tests automatiques utilisent H2 avec Flyway ; aucun test manuel MySQL lance.
+`git diff --check` reussi, frontend et dependances inchanges, aucun secret ajoute.
+Aucun commit ni push pour 5A. 5B Frontend Admin et Machine Learning non commences.
