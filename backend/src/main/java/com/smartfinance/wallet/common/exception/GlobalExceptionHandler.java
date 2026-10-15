@@ -1,5 +1,8 @@
 package com.smartfinance.wallet.common.exception;
 
+import com.smartfinance.wallet.account.exception.AccountNotFoundException;
+import com.smartfinance.wallet.account.exception.CurrentPasswordIncorrectException;
+import com.smartfinance.wallet.account.exception.PasswordUnchangedException;
 import com.smartfinance.wallet.admin.exception.AdminAccountActionForbiddenException;
 import com.smartfinance.wallet.admin.exception.AdminSelfBlockException;
 import com.smartfinance.wallet.admin.exception.UserNotFoundException;
@@ -30,6 +33,26 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountNotFound(
+            AccountNotFoundException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request.getRequestURI(), Map.of());
+    }
+
+    @ExceptionHandler(CurrentPasswordIncorrectException.class)
+    public ResponseEntity<ApiErrorResponse> handleCurrentPasswordIncorrect(
+            CurrentPasswordIncorrectException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(),
+                Map.of("currentPassword", exception.getMessage()));
+    }
+
+    @ExceptionHandler(PasswordUnchangedException.class)
+    public ResponseEntity<ApiErrorResponse> handlePasswordUnchanged(
+            PasswordUnchangedException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request.getRequestURI(),
+                Map.of("newPassword", exception.getMessage()));
+    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleUserNotFound(
