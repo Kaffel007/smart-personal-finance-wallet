@@ -86,8 +86,8 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 5A Backend Admin MVP | Termine et valide MySQL |
 | 5B Frontend Admin | Termine (administration confirmee terminee par l'utilisateur) |
 | 6. Gestion du compte | En cours |
-| 6A Backend self-service account | Implemente/teste automatiquement sur H2 |
-| 6B Frontend Mon compte | Non commence |
+| 6A Backend self-service account | Termine et valide MySQL |
+| 6B Frontend Mon compte | Implemente/teste Angular ; validation navigateur restante |
 | Machine Learning | Non commence ; prevu apres phase 6 |
 | Notifications et export | Planifies |
 
@@ -95,7 +95,7 @@ La feuille de route detaillee est disponible dans [documentation/roadmap.md](doc
 
 ## Etat actuel
 
-Le MVP utilisateur (backend et frontend des phases 1 a 4E) et l'administration USER/ADMIN sont confirmes termines par l'utilisateur. La phase 6A Backend self-service account est implementee et testee automatiquement sur H2. La page Mon compte (6B) et le ML ne sont pas commences ; le ML est prevu apres la phase 6. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
+Le MVP utilisateur (backend et frontend des phases 1 a 4E) et l'administration USER/ADMIN sont confirmes termines par l'utilisateur. La phase 6A Backend self-service account est terminee et validee MySQL selon sa confirmation. La page Mon compte (6B) est implementee et testee Angular, avec validation navigateur restante. Le ML n'est pas commence ; il est prevu apres la phase 6. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
@@ -441,4 +441,44 @@ Les tests prouvent l'isolation USER/ADMIN face aux injections de cible et de cha
 de securite, le hash BCrypt, les nouveaux logins et le comportement des JWT existants.
 `./mvnw.cmd package -DskipTests` reussi apres les tests ; `git diff --check` reussi.
 Frontend, Admin, JWT, modele AppUser, dependances et migrations inchanges.
-Aucun test manuel MySQL effectue. 6B et ML non commences ; aucun commit ni push pour 6A.
+Aucun test manuel MySQL effectue pendant l'implementation Codex de 6A. La validation
+MySQL reelle, la documentation, le commit et le push de 6A sont ensuite confirmes
+par l'utilisateur.
+
+## Frontend — Phase 6B Mon compte
+
+La route `/account`, protegee par authGuard sans adminGuard, utilise le meme
+composant pour USER et ADMIN. Le lien « Mon compte » est disponible dans les deux
+navigations. Chaque utilisateur peut gerer uniquement son propre compte : aucune
+cible configurable, aucun selecteur utilisateur, aucun controle de role/enabled/
+blocked. L'espace Administration reste separe, sans edition du profil d'un USER.
+
+Quatre sections : informations du compte en lecture seule (identite, e-mail, role,
+statut, date francaise), informations personnelles, adresse e-mail et mot de passe.
+AccountService appelle uniquement les endpoints /api/account/me, /profile, /email
+et /password avec les DTO attendus ; les payloads excluent les champs supplementaires.
+JWT et HTTP 401 restent geres par l'interceptor existant.
+
+Les formulaires reactifs reutilisent les validateurs existants : noms non blancs
+de 100 caracteres maximum, e-mail valide de 254 caracteres maximum, mot de passe
+de 12 caracteres Unicode minimum et 72 octets UTF-8 maximum. La confirmation est
+obligatoire et identique ; le nouveau mot de passe doit differer de l'actuel.
+La confirmation reste locale et n'est jamais envoyee au backend.
+
+Apres modification du profil ou de l'e-mail, Account et le resume AuthService sont
+synchronises en memoire ; l'en-tete se met a jour sans reconnexion. Les mots de
+passe sont effaces apres succes et a la destruction du composant, sans stockage
+persistant ni journalisation. Les erreurs de credentials effacent aussi les champs
+concernes. Chargement/retry et sauvegardes separes, doubles soumissions bloquees,
+messages locaux (dont e-mail utilise 409 et mot de passe actuel incorrect 400).
+
+La session continue apres modification du profil, de l'e-mail et du mot de passe.
+Le JWT existant reste valide jusqu'a expiration selon le comportement backend,
+sans logout force apres succes. Le backend reste responsable de l'isolation stricte.
+Cards responsive, labels/aides associes, autocomplete adapte, focus visible,
+messages status/alert et formulaires clavier ; aucune bibliotheque ajoutee.
+
+Validation : 275 tests Angular reussis (53 nouveaux), npm run build et
+git diff --check reussis. Aucun fichier backend, migration, MySQL, CORS ou dependance
+modifie. Validation navigateur reelle de 6B restante. Aucun commit ni push pour 6B ;
+Machine Learning non commence.

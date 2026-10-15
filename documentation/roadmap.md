@@ -145,7 +145,7 @@ L'administration USER/ADMIN est confirmee terminee par l'utilisateur.
 
 ## 6. Gestion du compte — En cours
 
-### 6A Backend self-service account — Implemente et teste automatiquement
+### 6A Backend self-service account — Termine et valide MySQL
 
 - Chaque utilisateur USER ou ADMIN peut modifier uniquement son propre compte.
 - GET /api/account/me : id, firstName, lastName, email, role, enabled, blocked et createdAt uniquement.
@@ -162,15 +162,28 @@ L'administration USER/ADMIN est confirmee terminee par l'utilisateur.
 - Non-regression Admin (41 tests), Auth/JWT/CORS et modules financiers reussie.
 - mvnw.cmd test, package -DskipTests apres tests et git diff --check reussis.
 - Frontend, endpoints Admin, JWT, AppUser, migrations et dependances inchanges ; aucun test manuel MySQL.
-- Aucun commit ni push pour 6A ; aucune phase 6B ou ML commencee.
+- Validation MySQL reelle, documentation, commit et push confirmes par l'utilisateur.
 
-### 6B Frontend Mon compte — Non commence
+### 6B Frontend Mon compte — Implemente et teste Angular
 
-Page Angular Mon compte pour USER et ADMIN, a realiser apres validation explicite de 6A.
+- Route /account avec authGuard uniquement, meme composant USER/ADMIN et lien Mon compte dans les deux navigations.
+- Modeles Account et requetes conformes aux DTO backend ; AccountService self-service sans cible configurable.
+- Quatre sections : informations du compte, profil, e-mail et mot de passe ; role/etats en lecture seule.
+- Formulaires reactifs, validateurs existants, confirmation locale identique et refus du nouveau mot de passe inchange.
+- Profil/e-mail synchronises en memoire avec AuthService et en-tete actualise sans reconnexion.
+- Credentials effaces apres succes, erreurs de credentials et destruction de la page ; aucun stockage persistant ni journalisation.
+- Session conservee ; JWT existant encore valide apres modification jusqu'a expiration selon les regles backend.
+- Chargement/retry, sauvegardes distinctes, verrou de mutation, feedback et messages metier locaux.
+- Responsive desktop/tablette/mobile, labels, focus visible, autocomplete adapte et status/alert.
+- Aucun selecteur utilisateur, changement role/enabled/blocked, suppression ou edition d'un USER par ADMIN.
+- Validation : 275 tests Angular reussis (53 nouveaux : 4 service, 42 composant, 7 navigation), build production et git diff --check reussis.
+- Validation navigateur reelle de 6B restante.
+- Backend, migrations, MySQL, CORS et dependances inchanges.
+- Aucun commit ni push pour 6B ; ML non commence.
 
 ## Machine Learning — Non commence
 
-Prevu apres la phase 6 Gestion du compte ; aucune implementation ML pendant 6A.
+Prevu apres la phase 6 Gestion du compte ; aucune implementation ML pendant 6A ou 6B.
 
 ## Phases futures — Planifiees
 
@@ -186,5 +199,5 @@ Prevu apres la phase 6 Gestion du compte ; aucune implementation ML pendant 6A.
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 6A s'arrete ici, implementee et testee automatiquement sur H2.
-Aucun commit ni push pour 6A ; 6B et Machine Learning non commences.
+La phase 6B s'arrete ici, implementee et testee Angular ; validation navigateur reelle restante.
+Aucun commit ni push pour 6B ; Machine Learning non commence.
