@@ -1,0 +1,8 @@
+.account-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; align-items: start; }
+.account-grid .panel { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.account-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.account-grid h2 { margin-top: 0; }
+.current-email { overflow-wrap: anywhere; }
+.actions .primary { white-space: normal; }
+@media (max-width: 1000px) { .account-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .account-details { grid-template-columns: 1fr; } }

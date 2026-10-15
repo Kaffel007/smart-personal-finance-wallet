@@ -31,6 +31,10 @@ export class AuthService {
     );
   }
   getToken(): string | null { return localStorage.getItem(TOKEN_STORAGE_KEY); }
+  syncCurrentUser(user: UserSummary): void {
+    const { id, firstName, lastName, email, role } = user;
+    this.userState.set({ id, firstName, lastName, email, role });
+  }
   isAuthenticated(): boolean { return !!this.getToken(); }
   logout(): void {
     localStorage.removeItem(TOKEN_STORAGE_KEY);

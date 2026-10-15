@@ -25,6 +25,7 @@ L'URL API est centralisée dans `src/app/core/api.config.ts`.
 - Guard de navigation et récupération du profil après rafraîchissement.
 - Déconnexion : suppression du token et du profil, redirection vers login.
 - Navigation USER : transactions, catégories, budgets et objectifs d'épargne ; navigation ADMIN : Administration, depuis 5B.
+- `/account` et lien Mon compte communs à USER et ADMIN depuis 6B, avec authGuard uniquement.
 
 L'inscription applique les limites backend : noms requis (100 caractères maximum),
 e-mail valide (254 caractères maximum), mot de passe non vide de 12 caractères
@@ -42,8 +43,8 @@ npm run build
 npm test -- --watch=false
 ```
 
-Build de production réussi et 222 tests réussis (Vitest, HttpTestingController et
-RouterTestingHarness), dont 59 tests ajoutés en 4C, 46 en 4D, 47 en 4E et 41 en 5B. Les tests HTTP sont
+Build de production réussi et 275 tests réussis (Vitest, HttpTestingController et
+RouterTestingHarness), dont 59 tests ajoutés en 4C, 46 en 4D, 47 en 4E, 41 en 5B et 53 en 6B. Les tests HTTP sont
 simulés et ne dépendent d'aucun backend réel ni de MySQL.
 
 La phase 4A et CORS ont été validés dans le navigateur par l'utilisateur.
@@ -62,6 +63,7 @@ Aucun fichier backend n'a été modifié pendant les phases frontend 4B, 4C, 4D 
 - `src/app/features/budgets/` : modèles, service CRUD/filtres, page, styles et tests.
 - `src/app/features/savings-goals/` : modèles, service CRUD, validations, page, styles et tests.
 - `src/app/features/admin/` : modèles de comptes/statistiques, service, page et tests.
+- `src/app/features/account/` : modèles self-service, service, formulaires, validation de confirmation et tests.
 - `src/app/core/admin.guard.ts` : contrôle du rôle ADMIN depuis le profil authentifié.
 - `src/app/shared/finance-ui.css` : styles communs aux pages de gestion.
 - `src/app/layout/` : layout connecté et chargement du profil.
@@ -302,3 +304,64 @@ Validation : 8 tests service, 22 tests composant et 11 nouveaux tests auth/guard
 soit 222 tests réussis au total. npm run build et git diff --check réussis.
 Les tests HTTP sont simulés ; validation navigateur réelle de 5B restante.
 Backend, migrations, MySQL et CORS inchangés. Aucun commit ni push ; ML non commencé.
+
+## Phase 6B — Mon compte
+
+`/account` est une route privée lazy-loaded commune à USER et ADMIN. Elle utilise
+authGuard et aucun adminGuard : une visite anonyme conduit au login. MainLayout
+ajoute Mon compte aux deux navigations, sans changer les destinations après login
+ou les autorisations Admin. Un même AccountComponent affiche les quatre sections :
+Informations du compte, Informations personnelles, Adresse e-mail et Mot de passe.
+
+`Account` reproduit les champs id, firstName, lastName, email, role, enabled,
+blocked et createdAt du backend inspecté. Les champs de rôle/statut restent en
+lecture seule. Les modèles de requêtes n'ont aucun identifiant cible ni champ
+de rôle/état ; le composant et les méthodes du service ne prennent aucune cible.
+Il n'existe aucun sélecteur utilisateur ni édition d'un USER par ADMIN.
+
+`AccountService` utilise l'URL API centralisée et expose :
+
+- getMe() : GET /api/account/me ;
+- updateProfile({ firstName, lastName }) : PUT /api/account/profile ;
+- updateEmail({ newEmail, currentPassword }) : PUT /api/account/email ;
+- changePassword({ currentPassword, newPassword }) : PUT /api/account/password, réponse 204.
+
+Les payloads sont construits explicitement avec ces seuls champs ; la confirmation
+reste locale. Authorization et HTTP 401 restent gérés par l'interceptor existant.
+Les informations affichent le rôle Utilisateur/Administrateur, les états Actif,
+Bloqué et Désactivé (les deux derniers ensemble si nécessaire), et la date française.
+Le profil préremplit prénom/nom avec les contraintes de RegisterComponent : requis,
+non blancs, 100 caractères maximum, puis trim avant envoi. L'e-mail est trim avant
+validation, requis, valide et limité à 254 caractères ; le mot de passe actuel
+est obligatoire et non blanc. Le formulaire de mot de passe réutilise exactement
+passwordValidator (12 caractères Unicode minimum, 72 octets UTF-8 maximum), exige
+une confirmation identique et refuse un nouveau mot de passe égal à l'actuel.
+
+Après profil/e-mail réussi, la réponse backend actualise Account et AuthService
+via syncCurrentUser, qui ne conserve que le résumé id/prénom/nom/e-mail/rôle.
+L'en-tête se met à jour sans nouvelle connexion ni système global supplémentaire.
+Les mots de passe sont effacés après succès, après erreur de credentials dans le
+formulaire concerné, et à la destruction du composant. Ils ne sont jamais stockés
+dans localStorage ou journalisés. Aucun hash/JWT n'est affiché.
+
+Chargement du compte avec retry, états distincts pour les trois sauvegardes et
+verrou commun contre les mutations concurrentes/doubles soumissions. Feedback
+par section ; e-mail utilisé 409, mauvais mot de passe actuel 400 et erreur de
+politique serveur sont traduits en messages locaux. Aucun JSON/message technique
+du backend n'est repris directement. Les mots de passe incorrects en 400 ne
+déconnectent pas l'utilisateur ; un 401 reste traité normalement par l'interceptor.
+
+La session continue après chaque modification. Le JWT existant reste valide après
+changement d'e-mail et de mot de passe jusqu'à expiration, sous réserve des contrôles
+backend habituels. Aucun logout forcé après succès. L'isolation est imposée par le backend.
+
+Styles finance-ui.css réutilisés ; quatre cards, deux colonnes desktop puis une
+sur tablette/mobile, labels visibles, aides/erreurs associées, focus visible,
+autocomplete given-name/family-name/email/current-password/new-password et status/alert.
+
+Validation : 4 tests service, 42 tests composant et 7 tests navigation ajoutés ;
+275 tests réussis au total, npm run build et git diff --check réussis.
+Les tests HTTP sont simulés. Backend, migrations, MySQL, CORS et dépendances inchangés.
+6A est terminée et validée MySQL selon la confirmation de l'utilisateur.
+6B est implémentée/testée Angular ; validation navigateur réelle restante.
+Aucun commit ni push pour 6B ; ML non commencé.

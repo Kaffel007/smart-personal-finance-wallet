@@ -20,6 +20,7 @@ import { AuthService } from '../core/auth.service';
           <a routerLink="/budgets" routerLinkActive="active" ariaCurrentWhenActive="page">Budgets</a>
           <a routerLink="/savings-goals" routerLinkActive="active" ariaCurrentWhenActive="page">Objectifs d'épargne</a>
           }
+          <a routerLink="/account" routerLinkActive="active" ariaCurrentWhenActive="page">Mon compte</a>
           }
         </nav>
         <button class="logout" type="button" (click)="auth.logout()">Déconnexion</button>

@@ -40,12 +40,12 @@ describe('Admin roles, guard and navigation', () => {
     await harness.navigateByUrl('/admin', LoginComponent);
     expect(TestBed.inject(Router).url).toBe('/login'); http.expectNone(meUrl);
   });
-  it('denies a cached USER and preserves all five personal navigation links', async () => {
+  it('denies a cached USER and preserves personal navigation with account access', async () => {
     cacheProfile(user);
     const harness = await RouterTestingHarness.create(); await harness.navigateByUrl('/admin'); harness.detectChanges();
     expect(TestBed.inject(Router).url).toBe('/dashboard');
     const links = Array.from(harness.routeNativeElement!.querySelectorAll('nav a')).map(link => link.getAttribute('href'));
-    expect(links).toEqual(['/dashboard', '/transactions', '/categories', '/budgets', '/savings-goals']);
+    expect(links).toEqual(['/dashboard', '/transactions', '/categories', '/budgets', '/savings-goals', '/account']);
     expect(harness.routeNativeElement?.querySelector('a[href="/admin"]')).toBeNull(); http.expectNone(meUrl);
   });
   it.each([user, admin])('loads the profile on direct /admin entry for role $role', async profile => {
@@ -63,7 +63,8 @@ describe('Admin roles, guard and navigation', () => {
     cacheProfile(admin);
     const harness = await RouterTestingHarness.create(); await harness.navigateByUrl('/admin'); harness.detectChanges();
     const navigation = harness.routeNativeElement!.querySelector('nav')!;
-    expect(navigation.querySelectorAll('a')).toHaveLength(1);
+    expect(navigation.querySelectorAll('a')).toHaveLength(2);
+    expect(navigation.querySelector('a[href="/account"]')?.textContent).toBe('Mon compte');
     expect(navigation.querySelector('a')?.getAttribute('href')).toBe('/admin');
     expect(navigation.querySelector('a')?.getAttribute('aria-current')).toBe('page');
     expect(harness.routeNativeElement?.textContent).toContain('Espace administrateur');

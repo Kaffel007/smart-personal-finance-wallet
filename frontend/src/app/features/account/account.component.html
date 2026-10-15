@@ -1,0 +1,49 @@
+<div class="page-heading"><div><p class="eyebrow">VOTRE PROFIL</p><h1>Mon compte</h1><p class="muted">Gérez vos informations personnelles et vos paramètres de connexion.</p></div></div>
+@if (loading()) { <p role="status">Chargement de votre compte…</p> }
+@else if (loadError()) { <p class="error-banner" role="alert">{{ loadError() }}</p><button class="secondary" type="button" (click)="load()">Réessayer</button> }
+@else if (account(); as info) {
+  <div class="account-grid">
+    <section class="panel" aria-labelledby="account-info-title">
+      <h2 id="account-info-title">Informations du compte</h2>
+      <dl class="account-details"><div><dt>Prénom</dt><dd>{{ info.firstName }}</dd></div><div><dt>Nom</dt><dd>{{ info.lastName }}</dd></div><div class="wide"><dt>E-mail</dt><dd>{{ info.email }}</dd></div><div><dt>Rôle</dt><dd>{{ info.role === 'ADMIN' ? 'Administrateur' : 'Utilisateur' }}</dd></div><div><dt>Statut</dt><dd>{{ info.blocked ? 'Bloqué' : info.enabled ? 'Actif' : 'Désactivé' }}@if (info.blocked && !info.enabled) { <span> · Désactivé</span> }</dd></div><div class="wide"><dt>Date de création</dt><dd>{{ formatDate(info.createdAt) }}</dd></div></dl>
+    </section>
+    <section class="panel" aria-labelledby="account-profile-title">
+      <h2 id="account-profile-title">Informations personnelles</h2>
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" [attr.aria-busy]="profileSaving()">
+        <fieldset [disabled]="busy()">
+          <label for="account-first-name">Prénom</label><input id="account-first-name" type="text" autocomplete="given-name" maxlength="100" formControlName="firstName" aria-describedby="account-first-name-help profile-error" [attr.aria-invalid]="profileForm.controls.firstName.touched && profileForm.controls.firstName.invalid"><p id="account-first-name-help" class="field-help" [class.field-error]="profileForm.controls.firstName.touched && profileForm.controls.firstName.invalid">Prénom requis, 100 caractères maximum.</p>
+          <label for="account-last-name">Nom</label><input id="account-last-name" type="text" autocomplete="family-name" maxlength="100" formControlName="lastName" aria-describedby="account-last-name-help profile-error" [attr.aria-invalid]="profileForm.controls.lastName.touched && profileForm.controls.lastName.invalid"><p id="account-last-name-help" class="field-help" [class.field-error]="profileForm.controls.lastName.touched && profileForm.controls.lastName.invalid">Nom requis, 100 caractères maximum.</p>
+        </fieldset>
+        <div id="profile-error">@if (profileError()) { <p class="error-banner" role="alert">{{ profileError() }}</p> }</div>
+        @if (profileFeedback()) { <p class="feedback" role="status">{{ profileFeedback() }}</p> }
+        <div class="actions"><button class="primary" type="submit" [disabled]="busy()">{{ profileSaving() ? 'Enregistrement…' : 'Enregistrer les informations' }}</button></div>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="account-email-title">
+      <h2 id="account-email-title">Adresse e-mail</h2><p class="current-email">Adresse actuelle : {{ info.email }}</p>
+      <form [formGroup]="emailForm" (ngSubmit)="saveEmail()" [attr.aria-busy]="emailSaving()">
+        <fieldset [disabled]="busy()">
+          <label for="account-new-email">Nouvelle adresse e-mail</label><input id="account-new-email" type="email" autocomplete="email" maxlength="254" formControlName="newEmail" aria-describedby="account-new-email-help email-error" [attr.aria-invalid]="emailForm.controls.newEmail.touched && emailForm.controls.newEmail.invalid"><p id="account-new-email-help" class="field-help" [class.field-error]="emailForm.controls.newEmail.touched && emailForm.controls.newEmail.invalid">Adresse e-mail requise et valide, 254 caractères maximum.</p>
+          <label for="account-email-password">Mot de passe actuel</label><input id="account-email-password" type="password" autocomplete="current-password" formControlName="currentPassword" aria-describedby="account-email-password-help email-error" [attr.aria-invalid]="emailForm.controls.currentPassword.touched && emailForm.controls.currentPassword.invalid"><p id="account-email-password-help" class="field-help" [class.field-error]="emailForm.controls.currentPassword.touched && emailForm.controls.currentPassword.invalid">Mot de passe actuel requis.</p>
+        </fieldset>
+        <div id="email-error">@if (emailError()) { <p class="error-banner" role="alert">{{ emailError() }}</p> }</div>
+        @if (emailFeedback()) { <p class="feedback" role="status">{{ emailFeedback() }}</p> }
+        <div class="actions"><button class="primary" type="submit" [disabled]="busy()">{{ emailSaving() ? 'Modification…' : "Modifier l’adresse e-mail" }}</button></div>
+      </form>
+    </section>
+    <section class="panel" aria-labelledby="account-password-title">
+      <h2 id="account-password-title">Mot de passe</h2>
+      <form [formGroup]="passwordForm" (ngSubmit)="savePassword()" [attr.aria-busy]="passwordSaving()">
+        <fieldset [disabled]="busy()">
+          <label for="account-current-password">Mot de passe actuel</label><input id="account-current-password" type="password" autocomplete="current-password" formControlName="currentPassword" aria-describedby="account-current-password-help password-error" [attr.aria-invalid]="passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid"><p id="account-current-password-help" class="field-help" [class.field-error]="passwordForm.controls.currentPassword.touched && passwordForm.controls.currentPassword.invalid">Mot de passe actuel requis.</p>
+          <label for="account-new-password">Nouveau mot de passe</label><input id="account-new-password" type="password" autocomplete="new-password" formControlName="newPassword" aria-describedby="account-new-password-help account-password-match-help password-error" [attr.aria-invalid]="passwordForm.controls.newPassword.touched && (passwordForm.controls.newPassword.invalid || passwordForm.hasError('passwordUnchanged'))"><p id="account-new-password-help" class="field-help" [class.field-error]="passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.invalid">Au moins 12 caractères Unicode et au plus 72 octets UTF-8.</p>
+          <label for="account-confirm-password">Confirmation du nouveau mot de passe</label><input id="account-confirm-password" type="password" autocomplete="new-password" formControlName="confirmation" aria-describedby="account-password-match-help password-error" [attr.aria-invalid]="passwordForm.controls.confirmation.touched && (passwordForm.controls.confirmation.invalid || passwordForm.hasError('passwordMismatch'))">
+          <p id="account-password-match-help" class="field-help" [class.field-error]="passwordForm.touched && (passwordForm.hasError('passwordMismatch') || passwordForm.hasError('passwordUnchanged') || passwordForm.controls.confirmation.invalid)">Confirmez le nouveau mot de passe à l'identique. Il doit être différent du mot de passe actuel.</p>
+        </fieldset>
+        <div id="password-error">@if (passwordError()) { <p class="error-banner" role="alert">{{ passwordError() }}</p> }</div>
+        @if (passwordFeedback()) { <p class="feedback" role="status">{{ passwordFeedback() }}</p> }
+        <div class="actions"><button class="primary" type="submit" [disabled]="busy()">{{ passwordSaving() ? 'Modification…' : 'Modifier le mot de passe' }}</button></div>
+      </form>
+    </section>
+  </div>
+}
