@@ -102,7 +102,9 @@ Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilis
 - Backend, Dashboard, migrations, MySQL, CORS et dependances inchanges.
 - Aucun SavingsContribution, liaison automatique aux transactions, Admin, ML ou notification ajoute.
 
-## 5. Administration — En cours
+## 5. Administration — Terminee
+
+L'administration USER/ADMIN est confirmee terminee par l'utilisateur.
 
 ### 5A Backend Admin MVP — Termine et valide MySQL
 
@@ -123,7 +125,7 @@ Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilis
 - Validation MySQL reelle confirmee par l'utilisateur : login ADMIN, stats/liste, blocage et rejet JWT/login USER, deblocage et reconnexion, USER refuse en 403.
 - Documentation, commit et push confirmes par l'utilisateur ; aucune suppression de compte ni modification de role.
 
-### 5B Frontend Admin — Implemente et teste Angular
+### 5B Frontend Admin — Termine
 
 - Route /admin protegee par authGuard et adminGuard, profil charge depuis /api/auth/me si absent.
 - Login existant : destination USER /dashboard ou ADMIN /admin selon /me ; aucun decodage JWT.
@@ -137,13 +139,38 @@ Le MVP utilisateur incluant les phases 4A a 4E est confirme termine par l'utilis
 - Confidentialite : aucune finance privee, aucun mot de passe/hash/JWT affiche.
 - Responsive, labels, boutons nommes, focus visible, status/alert et navigation clavier.
 - Validation : 222 tests Angular reussis (41 nouveaux), build production et git diff --check reussis.
-- Validation navigateur reelle de 5B restante.
+- Administration USER/ADMIN incluant 5B confirmee terminee par l'utilisateur.
 - Backend, migrations, MySQL, CORS et dependances inchanges.
-- Aucun commit ni push pour 5B ; Machine Learning non commence.
+- Machine Learning non commence.
+
+## 6. Gestion du compte — En cours
+
+### 6A Backend self-service account — Implemente et teste automatiquement
+
+- Chaque utilisateur USER ou ADMIN peut modifier uniquement son propre compte.
+- GET /api/account/me : id, firstName, lastName, email, role, enabled, blocked et createdAt uniquement.
+- PUT /api/account/profile : prenom/nom selon les contraintes existantes, puis trim.
+- PUT /api/account/email : newEmail normalise, currentPassword obligatoire, unicite et erreur 409.
+- PUT /api/account/password : currentPassword verifie, @ValidPassword existant et BCrypt ; HTTP 204.
+- Ancien mot de passe refuse au login, nouveau accepte ; nouveau mot de passe identique refuse en 400.
+- Aucun id cible dans URL/DTO ; champs cibles et de securite injectes ignores sans effet.
+- Aucun changement role/enabled/blocked, aucune suppression, aucun edit USER par ADMIN.
+- AccountService transactionnel, erreurs metier dans GlobalExceptionHandler, aucun secret retourne ou journalise.
+- JWT existants compatibles avec le changement d'e-mail et encore valides apres changement de mot de passe jusqu'a expiration.
+- Comptes bloques/desactives et JWT invalides refuses par le filtre existant ; pas de nouvelle revocation ni tokenVersion.
+- Validation H2 : 305 tests backend reussis, dont 59 nouveaux (53 integration, 6 unitaires).
+- Non-regression Admin (41 tests), Auth/JWT/CORS et modules financiers reussie.
+- mvnw.cmd test, package -DskipTests apres tests et git diff --check reussis.
+- Frontend, endpoints Admin, JWT, AppUser, migrations et dependances inchanges ; aucun test manuel MySQL.
+- Aucun commit ni push pour 6A ; aucune phase 6B ou ML commencee.
+
+### 6B Frontend Mon compte — Non commence
+
+Page Angular Mon compte pour USER et ADMIN, a realiser apres validation explicite de 6A.
 
 ## Machine Learning — Non commence
 
-Prevu apres l'administration ; aucune implementation ML pendant 5A ou 5B.
+Prevu apres la phase 6 Gestion du compte ; aucune implementation ML pendant 6A.
 
 ## Phases futures — Planifiees
 
@@ -159,5 +186,5 @@ Prevu apres l'administration ; aucune implementation ML pendant 5A ou 5B.
 - Documentation finale et preparation de la demonstration PFA.
 - Flutter : perspective future uniquement.
 
-La phase 5B s'arrete ici, implementee et testee Angular ; validation navigateur reelle restante.
-Aucun commit ni push pour 5B ; Machine Learning non commence.
+La phase 6A s'arrete ici, implementee et testee automatiquement sur H2.
+Aucun commit ni push pour 6A ; 6B et Machine Learning non commences.

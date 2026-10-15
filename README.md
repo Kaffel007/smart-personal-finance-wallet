@@ -82,17 +82,20 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 4C Transactions et categories frontend | Terminee et validee navigateur |
 | 4D Budgets UI | Terminee et validee navigateur |
 | 4E Savings Goals UI | Terminee (MVP utilisateur confirme par l'utilisateur) |
-| 5. Administration | En cours |
+| 5. Administration | Terminee (confirmation utilisateur) |
 | 5A Backend Admin MVP | Termine et valide MySQL |
-| 5B Frontend Admin | Implemente/teste Angular ; validation navigateur restante |
-| Machine Learning | Non commence ; prevu apres administration |
+| 5B Frontend Admin | Termine (administration confirmee terminee par l'utilisateur) |
+| 6. Gestion du compte | En cours |
+| 6A Backend self-service account | Implemente/teste automatiquement sur H2 |
+| 6B Frontend Mon compte | Non commence |
+| Machine Learning | Non commence ; prevu apres phase 6 |
 | Notifications et export | Planifies |
 
 La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
 
 ## Etat actuel
 
-Le MVP utilisateur (backend et frontend des phases 1 a 4E) est confirme termine par l'utilisateur. La phase 5A Backend Admin est terminee et validee MySQL selon sa confirmation ; 5B Frontend Admin est implementee et testee Angular, avec validation navigateur restante. Le ML n'est pas commence. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
+Le MVP utilisateur (backend et frontend des phases 1 a 4E) et l'administration USER/ADMIN sont confirmes termines par l'utilisateur. La phase 6A Backend self-service account est implementee et testee automatiquement sur H2. La page Mon compte (6B) et le ML ne sont pas commences ; le ML est prevu apres la phase 6. Le backend Spring Boot 3.5.16 est initialise avec Java 21.0.11. Le modele persistant `AppUser`, l'enum `Role`, le repository utilisateur et la premiere migration Flyway sont implementes. La migration V1 et la table `app_users` ont ete validees avec H2 en memoire et MySQL 8.
 
 La connexion locale a MySQL avec le compte technique `finance_app`, l'application de la migration V1 par Flyway et la validation du schema par Hibernate ont ete verifiees. L'endpoint `/actuator/health` retourne `UP`. L'endpoint `/actuator/info` est disponible, mais aucune information personnalisee n'est encore configuree.
 
@@ -374,5 +377,68 @@ Le backend reste responsable des autorisations et de la confidentialite.
 
 Validation : 222 tests Angular reussis (41 nouveaux), npm run build et
 git diff --check reussis. Aucun backend, migration, MySQL, CORS ou dependance modifie.
-Validation navigateur reelle de 5B restante. Aucun commit ni push pour 5B ;
+L'administration USER/ADMIN incluant 5B est confirmee terminee par l'utilisateur.
 Machine Learning non commence.
+
+## Backend — Phase 6A Self-service account
+
+Chaque utilisateur, USER ou ADMIN, peut modifier uniquement son propre compte.
+L'ADMIN ne peut pas modifier les données de profil d'un autre utilisateur.
+Les API Admin existantes restent limitees a la consultation des informations de
+compte et aux actions de blocage/deblocage deja autorisees.
+
+| Methode | Endpoint | Requete / reponse |
+| --- | --- | --- |
+| GET | `/api/account/me` | Compte du principal JWT |
+| PUT | `/api/account/profile` | firstName, lastName ; retourne le compte actualise |
+| PUT | `/api/account/email` | newEmail, currentPassword ; retourne le compte actualise |
+| PUT | `/api/account/password` | currentPassword, newPassword ; HTTP 204 sans body |
+
+AccountController extrait exclusivement principal.id() du contexte authentifie.
+Aucun identifiant cible n'existe dans les URL ou DTO. Les champs supplementaires
+id/userId/role/enabled/blocked envoyes dans le JSON sont ignores, sans effet ; un
+parametre userId ne change pas le compte cible. AccountService porte les regles
+metier et les transactions DB. Aucun role, enabled, blocked ou autre compte n'est
+modifie par ces endpoints ; aucune suppression de compte n'est implementee.
+
+AccountResponse expose uniquement id, firstName, lastName, email, role, enabled,
+blocked et createdAt. Aucun password/hash, JWT ou champ financier n'est retourne.
+Les requetes sont des DTO dedies ; les representations toString des DTO contenant
+des mots de passe sont masquees, et le nouveau code ne journalise aucun mot de passe.
+
+UpdateProfileRequest reprend les contraintes d'inscription : prenom et nom non
+blancs, 100 caracteres maximum chacun, puis suppression des espaces externes.
+UpdateEmailRequest valide newEmail comme a l'inscription : non blanc, format e-mail,
+254 caracteres maximum apres trim ; normalisation avec Locale.ROOT en minuscules.
+Le mot de passe actuel est obligatoire et verifie par PasswordEncoder avant la
+verification d'unicite. L'e-mail d'un autre compte retourne 409 ; conserver son
+propre e-mail normalise est autorise. La contrainte unique existante arbitre aussi
+les collisions concurrentes, traduites en erreur metier sans details SQL.
+
+ChangePasswordRequest reutilise @ValidPassword : nouveau mot de passe non blanc,
+au moins 12 caracteres Unicode et au plus 72 octets UTF-8. Le mot de passe actuel
+est verifie avec BCrypt et un nouveau mot de passe identique est refuse. Le
+nouveau mot de passe est enregistre uniquement sous forme de hash BCrypt.
+L'ancien mot de passe ne permet plus une nouvelle connexion ; le nouveau le permet.
+
+Erreurs via GlobalExceptionHandler : validation et mot de passe actuel incorrect
+en 400 (fieldErrors.currentPassword), mot de passe identique en 400
+(fieldErrors.newPassword), e-mail utilise en 409 et compte introuvable en 404.
+Un JWT absent/invalide ou un compte bloque/desactive/supprime est refuse en 401
+par la securite existante, avant l'acces aux endpoints self-service.
+
+**JWT apres modification :** le subject contient l'id et le filtre recharge le
+compte en base. Modifier l'e-mail ne casse donc pas un JWT existant ; /api/auth/me
+retourne les nouvelles informations et le login utilise desormais le nouvel e-mail.
+**Changer le mot de passe ne revoque pas les JWT deja emis : ils restent valides
+jusqu'a expiration**, sous reserve des controles habituels de signature et d'etat
+du compte. Aucune tokenVersion, blacklist ou migration n'est ajoutee dans 6A.
+
+Validation : `./mvnw.cmd test` reussi, **305 tests backend**, dont 59 nouveaux
+(53 integration Account et 6 unitaires), sans echec, erreur ou test ignore.
+La suite Admin existante (41 tests) et les tests Auth/JWT/CORS/finances restent verts.
+Les tests prouvent l'isolation USER/ADMIN face aux injections de cible et de champs
+de securite, le hash BCrypt, les nouveaux logins et le comportement des JWT existants.
+`./mvnw.cmd package -DskipTests` reussi apres les tests ; `git diff --check` reussi.
+Frontend, Admin, JWT, modele AppUser, dependances et migrations inchanges.
+Aucun test manuel MySQL effectue. 6B et ML non commences ; aucun commit ni push pour 6A.
