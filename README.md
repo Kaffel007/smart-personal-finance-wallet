@@ -80,8 +80,8 @@ Les secrets reels ne doivent jamais etre enregistres dans le depot. Les donnees 
 | 4A Fondation et authentification | Terminee et validee navigateur |
 | 4B Dashboard frontend | Terminee et validee navigateur |
 | 4C Transactions et categories frontend | Terminee et validee navigateur |
-| 4D Budgets UI | Implementee/testee Angular ; validation navigateur restante |
-| 4E Savings Goals UI | Non commencee |
+| 4D Budgets UI | Terminee et validee navigateur |
+| 4E Savings Goals UI | Implementee/testee Angular ; validation navigateur restante |
 | Administration, notifications, export et ML | Planifies |
 
 La feuille de route detaillee est disponible dans [documentation/roadmap.md](documentation/roadmap.md).
@@ -147,7 +147,7 @@ L'interceptor ajoute Authorization Bearer uniquement aux endpoints proteges de
 l'API configuree et supprime la session en cas de reponse 401 protegee. Le guard
 protege `/dashboard` ; le backend reste responsable de l'autorisation et de
 l'isolation des donnees. Le layout responsive contient la navigation et logout.
-Transactions, categories et budgets sont accessibles ; objectifs restent a venir. Le dashboard est
+Transactions, categories, budgets et objectifs d'epargne sont accessibles. Le dashboard est
 maintenant connecte aux statistiques en phase 4B.
 La racine et les routes inconnues redirigent vers dashboard si un token existe,
 sinon vers login. Le profil est recharge apres un rafraichissement.
@@ -166,7 +166,7 @@ La phase 4A et le CORS dev ont ete valides dans le navigateur par l'utilisateur.
 Le backend attendu sur localhost:8080 doit utiliser le profil Spring dev pour
 autoriser l'origine http://localhost:4200.
 
-Details : [frontend/README.md](frontend/README.md). Transactions et categories sont terminees en 4C ; budgets UI implementes en 4D ; objectifs UI restent a venir.
+Details : [frontend/README.md](frontend/README.md). Transactions et categories sont terminees en 4C ; budgets UI termines en 4D ; objectifs UI implementes en 4E.
 
 ## Frontend — Phase 4B Dashboard
 
@@ -216,7 +216,7 @@ uniquement visuels. Un succes ferme le formulaire et actualise la liste avec fee
 
 Pages responsive avec cartes lisibles sur mobile, labels, focus visible, messages
 accessibles, chargements, actions desactivees pendant mutations, erreurs/retry et
-etats vides. Budgets accessibles depuis 4D ; objectifs restent a venir. Aucune dependance ajoutee.
+etats vides. Budgets accessibles depuis 4D ; objectifs accessibles depuis 4E. Aucune dependance ajoutee.
 
 Validation : npm test -- --watch=false : 88 tests reussis ; npm run build reussi.
 La validation navigateur reelle de 4C est confirmee par l'utilisateur ; cette phase
@@ -246,5 +246,36 @@ Chargements, etats vides, erreurs/retry, labels et focus visible sont pris en ch
 
 Validation : 134 tests Angular reussis (46 nouveaux), build de production reussi
 et git diff --check reussi. Aucun backend, migration, MySQL, CORS ou dependance
-modifie ; logique Dashboard inchangee. Validation navigateur reelle de 4D restante.
-Aucun commit ni push pour 4D ; 4E Savings Goals UI non commencee.
+modifie ; logique Dashboard inchangee. Validation navigateur reelle de 4D terminee,
+documentation, commit et push confirmes par l'utilisateur.
+
+## Frontend — Phase 4E Objectifs d'epargne UI
+
+La route privee `/savings-goals`, protegee par AuthGuard, est accessible dans
+MainLayout. SavingsGoalService utilise le CRUD `/api/savings-goals`, avec le JWT
+ajoute uniquement par l'interceptor existant. Les payloads contiennent seulement
+name, targetAmount, savedAmount et targetDate, sans champ calcule ni userId.
+
+Le formulaire reactif permet de creer et modifier un objectif : nom non blanc
+(120 caracteres maximum), cible strictement positive et epargne positive ou nulle,
+avec les limites backend de 15 chiffres entiers et 4 decimales. L'epargne est
+initialisee a zero, facultative en creation (vide envoye comme zero) et requise
+en modification. La date cible est facultative, accepte une date passee et est
+affichee au format dd/MM/yyyy ; sans date, « Aucune date cible » est affiche.
+
+Les cartes affichent cible, epargne, restant et progression issus du backend,
+avec FinancialAmountPipe et le suffixe « unités ». La barre CSS et aria-valuenow
+sont bornees a 0..100, tandis que texte et aria-valuetext conservent la progression
+reelle, y compris au-dela de 100 %. « Objectif atteint » apparait des 100 % ; le
+restant negatif reste visible et le style signale la reussite.
+
+Creation, modification et suppression confirmee rechargent la liste avec feedback.
+Chargements, doubles soumissions bloquees, erreurs locales, retry, etat vide,
+labels, focus visible et progression ARIA sont geres. Grille responsive desktop,
+deux colonnes tablette et une mobile. La logique Dashboard reste inchangee.
+
+Validation : 181 tests Angular reussis (47 nouveaux), npm run build et
+git diff --check reussis. Validation navigateur reelle de 4E restante.
+Aucune dependance ajoutee ; backend, migrations, MySQL et CORS inchanges.
+Aucun SavingsContribution, liaison automatique aux transactions, Admin, ML ou
+notification ajoute. Aucun commit ni push pour 4E ; aucune phase suivante commencee.
